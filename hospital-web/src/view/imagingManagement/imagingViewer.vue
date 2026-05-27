@@ -212,7 +212,7 @@ export default {
     window.removeEventListener('resize', this.drawScene)
   },
   methods: {
-    async loadImagingData() {
+    loadImagingData() {
       const routeId = Number(this.$route.query.id)
       const demoList = this.ensureDemoImagings()
       const localItem = demoList.find(item => item.id === routeId)
@@ -223,14 +223,19 @@ export default {
       }
 
       if (routeId) {
-        try {
-          const res = await getImagingInfo(routeId)
+        getImagingInfo(routeId).then(res => {
           if (res.code === 200 && res.data) {
             this.imagingData = this.normalizeImaging(res.data)
           }
-        } catch (e) {
+        }).catch(e => {
           console.error('获取影像数据失败:', e)
-        }
+        }).finally(() => {
+          if (!this.imagingData.id) {
+            this.imagingData = this.normalizeImaging(demoList[0])
+          }
+          this.drawScene()
+        })
+        return
       }
 
       if (!this.imagingData.id) {

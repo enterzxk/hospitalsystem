@@ -163,26 +163,25 @@ export default {
     this.loadReportList()
   },
   methods: {
-    async loadReportList() {
+    loadReportList() {
       this.loading = true
-      try {
-        const params = {
-          pageNum: this.pagination.pageNum,
-          pageSize: this.pagination.pageSize
-        }
-        if (this.filterForm.reportStatus !== '') {
-          params.reportStatus = this.filterForm.reportStatus
-        }
-        if (this.filterForm.examinationType) {
-          params.examinationType = this.filterForm.examinationType
-        }
+      const params = {
+        pageNum: this.pagination.pageNum,
+        pageSize: this.pagination.pageSize
+      }
+      if (this.filterForm.reportStatus !== '') {
+        params.reportStatus = this.filterForm.reportStatus
+      }
+      if (this.filterForm.examinationType) {
+        params.examinationType = this.filterForm.examinationType
+      }
 
-        const res = await getReportList(params)
+      getReportList(params).then(res => {
         if (res.code === 200) {
           this.reportList = res.data.list || []
           this.pagination.total = res.data.total || 0
         }
-      } catch (e) {
+      }).catch(e => {
         console.error('加载报告列表失败:', e)
         // Demo数据
         this.reportList = [
@@ -223,9 +222,9 @@ export default {
           }
         ]
         this.pagination.total = this.reportList.length
-      } finally {
+      }).finally(() => {
         this.loading = false
-      }
+      })
     },
 
     getStatusType(status) {
@@ -276,38 +275,34 @@ export default {
       })
     },
 
-    async submitReport(row) {
-      try {
-        await this.$confirm('确认提交该报告？提交后将无法修改。', '提示', {
+    submitReport(row) {
+      this.$confirm('确认提交该报告？提交后将无法修改。', '提示', {
           type: 'warning'
-        })
-        const res = await submitReportApi(row.id)
+        }).then(() => submitReportApi(row.id)).then(res => {
         if (res.code === 200) {
           this.$message.success('报告已提交')
           this.loadReportList()
         }
-      } catch (e) {
+      }).catch(e => {
         if (e !== 'cancel') {
           this.$message.error('提交失败: ' + e.message)
         }
-      }
+      })
     },
 
-    async deleteReport(row) {
-      try {
-        await this.$confirm('确认删除该报告？', '提示', {
+    deleteReport(row) {
+      this.$confirm('确认删除该报告？', '提示', {
           type: 'warning'
-        })
-        const res = await deleteReportApi(row.id)
+        }).then(() => deleteReportApi(row.id)).then(res => {
         if (res.code === 200) {
           this.$message.success('报告已删除')
           this.loadReportList()
         }
-      } catch (e) {
+      }).catch(e => {
         if (e !== 'cancel') {
           this.$message.error('删除失败: ' + e.message)
         }
-      }
+      })
     },
 
     printReport() {

@@ -202,24 +202,24 @@ export default {
         .map(this.normalizeImaging)
         .filter(item => item.diagnosisStatus !== 'completed')
     },
-    async loadPendingList() {
-      try {
-        const res = await getImagingList({
-          diagnosisStatus: 0,
-          pageNum: 1,
-          pageSize: 20
-        })
+    loadPendingList() {
+      getImagingList({
+        diagnosisStatus: 0,
+        pageNum: 1,
+        pageSize: 20
+      }).then(res => {
         if (res.code === 200) {
           const apiList = res.data && res.data.list ? res.data.list.map(this.normalizeImaging) : []
           this.pendingList = apiList.length ? apiList : this.getLocalPendingList()
         }
-      } catch (e) {
+      }).catch(e => {
         console.error('加载待诊断列表失败:', e)
         this.pendingList = this.getLocalPendingList()
-      }
-      this.stats.todayPending = this.pendingList.length
-      this.stats.todayTotal = this.ensureDemoImagings().length
-      this.stats.todayDiagnosed = Math.max(0, this.stats.todayTotal - this.stats.todayPending)
+      }).finally(() => {
+        this.stats.todayPending = this.pendingList.length
+        this.stats.todayTotal = this.ensureDemoImagings().length
+        this.stats.todayDiagnosed = Math.max(0, this.stats.todayTotal - this.stats.todayPending)
+      })
     },
 
     refreshPending() {
