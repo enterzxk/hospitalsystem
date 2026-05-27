@@ -1,0 +1,67 @@
+# Build outputs
+target/
+dist/
+build/
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Java
+*.class
+*.jar
+*.war
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Frontend
+hospital-web/node_modules/
+hospital-web/dist/
+
+# Backend
+hospital/target/
+
+# Temporary files
+*.tmp
+*.bak
+
+# Understanding Anything
+.understand-anything/
+
+# Large files
+*.pdf
+*.zip
+*.tar.gz
+*.exe
+
+# Node
+node-v16.20.2-win-x64/
+
+# Redis
+Redis/
+Redis-x64-3.0.504.zip
+
+# Images (keep only essential ones)
+*.png
+!hospital-web/src/assets/*.png
+!hospital/src/main/resources/static/*.png
+
+# Data files
+影像数据/
+患者版界面图标照片/
+挂号界面图标照片/
+核心功能.png
+用户附件.png
+商标.png
+小图标*.png
+医院背景图.png

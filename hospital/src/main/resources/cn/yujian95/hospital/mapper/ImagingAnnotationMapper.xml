@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yujian95.hospital.mapper.ImagingAnnotationMapper">
+
+    <resultMap id="BaseResultMap" type="cn.yujian95.hospital.entity.ImagingAnnotation">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="imaging_id" property="imagingId" jdbcType="BIGINT"/>
+        <result column="doctor_id" property="doctorId" jdbcType="BIGINT"/>
+        <result column="annotation_type" property="annotationType" jdbcType="VARCHAR"/>
+        <result column="annotation_data" property="annotationData" jdbcType="LONGVARCHAR"/>
+        <result column="label" property="label" jdbcType="VARCHAR"/>
+        <result column="color" property="color" jdbcType="VARCHAR"/>
+        <result column="gmt_create" property="gmtCreate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, imaging_id, doctor_id, annotation_type, annotation_data, label, color, gmt_create
+    </sql>
+
+    <select id="selectByImagingId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List" />
+        from imaging_annotation
+        where imaging_id = #{imagingId,jdbcType=BIGINT}
+        order by gmt_create desc
+    </select>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List" />
+        from imaging_annotation
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <insert id="insert" parameterType="cn.yujian95.hospital.entity.ImagingAnnotation" useGeneratedKeys="true" keyProperty="id">
+        insert into imaging_annotation (imaging_id, doctor_id, annotation_type,
+            annotation_data, label, color, gmt_create)
+        values (#{imagingId,jdbcType=BIGINT}, #{doctorId,jdbcType=BIGINT}, #{annotationType,jdbcType=VARCHAR},
+            #{annotationData,jdbcType=LONGVARCHAR}, #{label,jdbcType=VARCHAR}, #{color,jdbcType=VARCHAR}, now())
+    </insert>
+
+    <insert id="insertSelective" parameterType="cn.yujian95.hospital.entity.ImagingAnnotation" useGeneratedKeys="true" keyProperty="id">
+        insert into imaging_annotation
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="imagingId != null">imaging_id,</if>
+            <if test="doctorId != null">doctor_id,</if>
+            <if test="annotationType != null">annotation_type,</if>
+            <if test="annotationData != null">annotation_data,</if>
+            <if test="label != null">label,</if>
+            <if test="color != null">color,</if>
+            gmt_create
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="imagingId != null">#{imagingId,jdbcType=BIGINT},</if>
+            <if test="doctorId != null">#{doctorId,jdbcType=BIGINT},</if>
+            <if test="annotationType != null">#{annotationType,jdbcType=VARCHAR},</if>
+            <if test="annotationData != null">#{annotationData,jdbcType=LONGVARCHAR},</if>
+            <if test="label != null">#{label,jdbcType=VARCHAR},</if>
+            <if test="color != null">#{color,jdbcType=VARCHAR},</if>
+            now()
+        </trim>
+    </insert>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from imaging_annotation where id = #{id,jdbcType=BIGINT}
+    </delete>
+
+    <delete id="deleteByImagingId" parameterType="java.lang.Long">
+        delete from imaging_annotation where imaging_id = #{imagingId,jdbcType=BIGINT}
+    </delete>
+
+    <update id="updateByPrimaryKeySelective" parameterType="cn.yujian95.hospital.entity.ImagingAnnotation">
+        update imaging_annotation
+        <set>
+            <if test="annotationData != null">annotation_data = #{annotationData,jdbcType=LONGVARCHAR},</if>
+            <if test="label != null">label = #{label,jdbcType=VARCHAR},</if>
+            <if test="color != null">color = #{color,jdbcType=VARCHAR},</if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <update id="updateByPrimaryKey" parameterType="cn.yujian95.hospital.entity.ImagingAnnotation">
+        update imaging_annotation
+        set imaging_id = #{imagingId,jdbcType=BIGINT},
+            doctor_id = #{doctorId,jdbcType=BIGINT},
+            annotation_type = #{annotationType,jdbcType=VARCHAR},
+            annotation_data = #{annotationData,jdbcType=LONGVARCHAR},
+            label = #{label,jdbcType=VARCHAR},
+            color = #{color,jdbcType=VARCHAR}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+</mapper>
