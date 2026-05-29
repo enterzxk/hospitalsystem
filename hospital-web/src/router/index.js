@@ -114,6 +114,26 @@ export const patientRouterMap = [
       meta: {title: '就诊记录', icon: 'el-icon-document'}
     }]
   }, {
+    path: '/patient/reportQuery',
+    component: layout,
+    redirect: '/patient/reportQuery',
+    meta: {title: '报告查询', icon: 'el-icon-s-check'},
+    children: [{
+      path: '/patient/reportQuery',
+      component: () => import('@/view/patient/reportQuery'),
+      meta: {title: '报告查询', icon: 'el-icon-s-check'}
+    }]
+  }, {
+    path: '/patient/paymentRecords',
+    component: layout,
+    redirect: '/patient/paymentRecords',
+    meta: {title: '缴费记录', icon: 'el-icon-wallet'},
+    children: [{
+      path: '/patient/paymentRecords',
+      component: () => import('@/view/patient/paymentRecords'),
+      meta: {title: '缴费记录', icon: 'el-icon-wallet'}
+    }]
+  }, {
     path: '/patient/profile',
     component: layout,
     redirect: '/patient/profile',

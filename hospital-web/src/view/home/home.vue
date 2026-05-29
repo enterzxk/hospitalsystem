@@ -25,9 +25,6 @@
             </el-button>
           </div>
         </div>
-        <div class="hero-right">
-          <img :src="appointmentBanner" alt="预约挂号" class="hero-banner-img">
-        </div>
       </div>
 
       <!-- 四大服务入口 -->
@@ -203,7 +200,6 @@ import {tips} from "@/common/js/optionTips";
 import {updatePassword} from "@/api/login";
 import {getToken} from "@/utils/auth";
 import SHA256 from 'js-sha256';
-import appointmentBanner from '@/assets/appointment-banner.png';
 import hospitalHero from '../../../../医院背景图.png';
 
 export default {
@@ -234,7 +230,6 @@ export default {
         { label: '影像报告', value: '32', icon: 'el-icon-document', color: '#9b59b6' }
       ],
       quickActions: [],
-      appointmentBanner,
       noticeItems: [
         '请携带有效身份证件和就诊卡按时到达医院',
         '预约成功后如需取消，请提前24小时操作',
@@ -251,6 +246,8 @@ export default {
         { title: '预约挂号', desc: '在线选择科室和医生，预约就诊时间', bg: 'linear-gradient(135deg, #075f42, #20a978)', route: '/patient/appointmentCreate', icon: 'el-icon-date' },
         { title: '我的预约', desc: '查看和管理您的预约挂号记录', bg: 'linear-gradient(135deg, #007a4d, #2ecc71)', route: '/patient/appointmentList', icon: 'el-icon-tickets' },
         { title: '就诊记录', desc: '查看历史就诊信息和诊断结果', bg: 'linear-gradient(135deg, #2980b9, #3498db)', route: '/patient/visitRecords', icon: 'el-icon-document' },
+        { title: '报告查询', desc: '查看诊断报告和检查结果', bg: 'linear-gradient(135deg, #e67e22, #f39c12)', route: '/patient/reportQuery', icon: 'el-icon-s-check' },
+        { title: '缴费记录', desc: '查看挂号费、检查费等缴费明细', bg: 'linear-gradient(135deg, #e74c3c, #c0392b)', route: '/patient/paymentRecords', icon: 'el-icon-wallet' },
         { title: '个人信息', desc: '查看和管理您的个人资料', bg: 'linear-gradient(135deg, #8e6bb0, #a57fd4)', route: '/patient/profile', icon: 'el-icon-user' }
       ]
     }
@@ -426,7 +423,7 @@ $primary-light: #20a978;
   position: relative;
   overflow: hidden;
   box-shadow: 0 12px 36px rgba(7, 95, 66, 0.25);
-  min-height: 280px;
+  min-height: 200px;
 
   &::before {
     content: '';
@@ -454,7 +451,6 @@ $primary-light: #20a978;
   flex: 1;
   position: relative;
   z-index: 2;
-  padding-right: 40px;
 }
 
 .hero-welcome {
@@ -532,26 +528,10 @@ $primary-light: #20a978;
   }
 }
 
-.hero-right {
-  flex-shrink: 0;
-  width: 280px;
-  height: 220px;
-  position: relative;
-  z-index: 2;
-
-  .hero-banner-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-  }
-}
-
-/* 四大服务入口 */
+/* 六大服务入口 */
 .patient-service-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 28px;
 }
