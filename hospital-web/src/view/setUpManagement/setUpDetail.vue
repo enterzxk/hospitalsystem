@@ -329,10 +329,14 @@
       getHospitalInfo: function () {
         this.hospitalData = [];
         getHospitalInfo(1, 50, '').then(res => {
-          if (res.code === 200 && res.data.list.length >0 ){
-            this.hospitalData = res.data.list;
-            this.selectHospitalID = res.data.list[0].id;
-            this.getHospitalDepartmentList()
+          if (res.code === 200){
+            if (res.data.list.length > 0) {
+              this.hospitalData = res.data.list;
+              this.selectHospitalID = res.data.list[0].id;
+              this.getHospitalDepartmentList()
+            } else {
+              this.tableAllData.dataNull = true
+            }
           }
         }).catch(() => {
           tips('error', '获取医院信息失败');
@@ -407,11 +411,11 @@
           if (res.code === 200) {
             if (res.data.list.length > 0) {
               this.doctorSelectData = res.data.list;
-              // this.selectDoctorID = this.doctorSelectData[0].id
-              this.getTreatRoom()
             }
           }
+          this.getTreatRoom()
         }).catch(() => {
+          this.getTreatRoom()
           tips('error', '获取所属医生列表失败')
         })
       },

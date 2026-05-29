@@ -120,22 +120,26 @@ export default {
           let _this = this;
           _this.tableAllData.tableData = [];
           getHospitalInfo(this.pageList.pageNum, this.pageList.pageSize, this.searchHospital).then(res => {
-            if (res.code === 200 && res.data.list.length >0 ){
-              this.pageList = {
-                pageNum: res.data.pageNum,
-                pageSize: res.data.pageSize,
-                total: res.data.total
-              };
-              res.data.list.forEach(function (item, index) {
-                _this.tableAllData.tableData.push({
-                  hospitalID: item.id,
-                  name: item.name,
-                  address: item.address,
-                  phone: item.phone,
-                  description: item.description,
-                  picture: item.picture
+            if (res.code === 200){
+              if (res.data.list.length > 0) {
+                this.pageList = {
+                  pageNum: res.data.pageNum,
+                  pageSize: res.data.pageSize,
+                  total: res.data.total
+                };
+                res.data.list.forEach(function (item, index) {
+                  _this.tableAllData.tableData.push({
+                    hospitalID: item.id,
+                    name: item.name,
+                    address: item.address,
+                    phone: item.phone,
+                    description: item.description,
+                    picture: item.picture
+                  })
                 })
-              })
+              } else {
+                this.tableAllData.dataNull = true
+              }
             }
           }).catch(() => {
             tips('error', '获取医院信息失败');

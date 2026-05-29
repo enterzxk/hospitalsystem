@@ -191,20 +191,22 @@
             this.pageList.pageSize,
             this.searchDoctor
           ).then(res => {
-            if (res.code === 200 && res.data.list.length >0 ){
-              res.data.list.forEach(function (item, index) {
-                _this.tableAllData.tableData.push({
-                  ID: item.id,
-                  name: item.name,
-                  gender: _this.getGender(item.gender),
-                  jobTitle: item.jobTitle,
-                  specialty: item.specialty,
-                  specialId: item.specialId,
-                  outpatientId: item.outpatientId
+            if (res.code === 200){
+              if (res.data.list.length > 0) {
+                res.data.list.forEach(function (item, index) {
+                  _this.tableAllData.tableData.push({
+                    ID: item.id,
+                    name: item.name,
+                    gender: _this.getGender(item.gender),
+                    jobTitle: item.jobTitle,
+                    specialty: item.specialty,
+                    specialId: item.specialId,
+                    outpatientId: item.outpatientId
+                  })
                 })
-              })
-            } else {
-              this.tableAllData.dataNull = true
+              } else {
+                this.tableAllData.dataNull = true
+              }
             }
           })
         },

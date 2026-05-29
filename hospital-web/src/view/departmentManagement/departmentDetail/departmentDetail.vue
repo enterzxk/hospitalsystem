@@ -203,19 +203,23 @@
           this.tableAllData.tableData = [];
           let _this = this;
           getDepartmentList(this.pageList.pageNum, this.pageList.pageSize, this.searchDepartment).then(res => {
-            if (res.code === 200 && res.data.list.length >0 ){
-              this.pageList = {
-                pageNum: res.data.pageNum,
-                pageSize: res.data.pageSize,
-                total: res.data.total
-              };
-              res.data.list.forEach(function (item, index) {
-                _this.tableAllData.tableData.push({
-                  ID: item.id,
-                  name: item.name,
-                  description: item.description,
+            if (res.code === 200){
+              if (res.data.list.length > 0) {
+                this.pageList = {
+                  pageNum: res.data.pageNum,
+                  pageSize: res.data.pageSize,
+                  total: res.data.total
+                };
+                res.data.list.forEach(function (item, index) {
+                  _this.tableAllData.tableData.push({
+                    ID: item.id,
+                    name: item.name,
+                    description: item.description,
+                  })
                 })
-              })
+              } else {
+                this.tableAllData.dataNull = true
+              }
             }
           }).catch(() => {
             tips('error', '获取信息失败，请检查网络');
