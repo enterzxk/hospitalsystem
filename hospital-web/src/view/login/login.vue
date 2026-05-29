@@ -239,7 +239,7 @@
     flex-direction: column;
     background:
       linear-gradient(135deg, rgba(0, 68, 50, 0.72), rgba(9, 129, 91, 0.36)),
-      url('../../../../商标.png') center/cover fixed no-repeat;
+      url('../../../../医院背景图.png') center/cover fixed no-repeat;
   }
 
   .header-bar {
@@ -343,7 +343,7 @@
     flex: 1;
     background:
       linear-gradient(135deg, rgba(7, 95, 66, 0.92) 0%, rgba(13, 138, 94, 0.76) 52%, rgba(32, 169, 120, 0.44) 100%),
-      url('../../../../商标.png') center/cover no-repeat;
+      url('../../../../医院背景图.png') center/cover no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;

@@ -357,7 +357,7 @@
 </template>
 
 <script>
-const hospitalHero = require('../../../../商标.png')
+const hospitalHero = require('../../../../医院背景图.png')
 const entryPatient = require('../../../../小图标1.png')
 const entryRegister = require('../../../../小图标2.png')
 const entryDepartment = require('../../../../小图标3.png')
