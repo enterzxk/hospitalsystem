@@ -98,6 +98,7 @@
         </div>
         <div class="department-browser">
           <div class="department-hero" :style="departmentHeroStyle">
+            <img v-if="selectedDepartment.image" :src="selectedDepartment.image" :alt="selectedDepartment.name" class="hero-dept-img">
             <div class="department-hero-mask">
               <span>{{ selectedDepartment.category }}</span>
               <h3>{{ selectedDepartment.name }}</h3>
@@ -770,7 +771,7 @@ export default {
     },
     departmentHeroStyle() {
       return {
-        background: this.selectedDepartment.gradient
+        background: this.selectedDepartment.image ? 'none' : this.selectedDepartment.gradient
       }
     }
   },
@@ -1339,6 +1340,16 @@ button {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 18px 38px rgba(8, 83, 61, 0.16);
+  position: relative;
+
+  .hero-dept-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
 .department-hero-mask {

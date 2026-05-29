@@ -20,7 +20,8 @@
       <div class="dept-card" v-for="dept in filteredList" :key="dept.name" @click="viewDetail(dept)">
         <div class="dept-visual" :style="{ background: dept.gradient }">
           <div class="dept-icon">
-            <i :class="dept.icon"></i>
+            <img v-if="dept.image" :src="dept.image" :alt="dept.name" class="dept-img">
+            <i v-else :class="dept.icon"></i>
           </div>
           <div class="dept-badge">{{ dept.category }}</div>
         </div>
@@ -45,7 +46,8 @@
       <div v-if="currentDept" class="detail-content">
         <div class="detail-header" :style="{ background: currentDept.gradient }">
           <div class="detail-icon">
-            <i :class="currentDept.icon"></i>
+            <img v-if="currentDept.image" :src="currentDept.image" :alt="currentDept.name" class="detail-img">
+            <i v-else :class="currentDept.icon"></i>
           </div>
           <div class="detail-info">
             <span class="detail-category">{{ currentDept.category }}</span>
@@ -107,6 +109,19 @@
 </template>
 
 <script>
+const deptNeike = require('../../../../科室图片/内科学系.png')
+const deptXinneike = require('../../../../科室图片/心内科.png')
+const deptHuxike = require('../../../../科室图片/呼吸与危重症医学科.png')
+const deptXiaohuake = require('../../../../科室图片/消化内科.png')
+const deptShenzangke = require('../../../../科室图片/肾脏科.png')
+const deptErke = require('../../../../科室图片/儿科.png')
+const deptWaike = require('../../../../科室图片/普通外科.png')
+const deptGuKe = require('../../../../科室图片/骨科.png')
+const deptFuchanke = require('../../../../科室图片/妇产科.png')
+const deptYingxiang = require('../../../../科室图片/医学影像科.png')
+const deptJianyanke = require('../../../../科室图片/检验科.png')
+const deptJiankang = require('../../../../科室图片/健康管理中心.png')
+
 export default {
   name: 'departmentIntroduction',
   data() {
@@ -120,6 +135,7 @@ export default {
           category: '非手术科室',
           tagline: '覆盖常见内科疾病、慢病管理和疑难病会诊。',
           desc: '提供心血管、呼吸、消化、内分泌等综合内科诊疗，支持多学科联合门诊。',
+          image: deptNeike,
           icon: 'el-icon-first-aid-kit',
           gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           location: '门诊楼 3 层 A 区',
@@ -136,6 +152,7 @@ export default {
           category: '非手术科室',
           tagline: '心血管疾病筛查、诊断、介入前评估与长期管理。',
           desc: '面向高血压、冠心病、心律失常、心衰等患者提供连续诊疗服务。',
+          image: deptXinneike,
           icon: 'el-icon-data-analysis',
           gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
           location: '门诊楼 4 层 B 区',
@@ -152,6 +169,7 @@ export default {
           category: '非手术科室',
           tagline: '呼吸系统疾病、肺部影像异常和重症呼吸支持。',
           desc: '开展慢阻肺、哮喘、肺部感染、肺结节初筛和呼吸康复评估。',
+          image: deptHuxike,
           icon: 'el-icon-odometer',
           gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
           location: '门诊楼 3 层 C 区',
@@ -168,6 +186,7 @@ export default {
           category: '非手术科室',
           tagline: '胃肠肝胆疾病、内镜评估和消化慢病管理。',
           desc: '提供胃炎、肠炎、肝功能异常、消化道出血风险评估和内镜预约指导。',
+          image: deptXiaohuake,
           icon: 'el-icon-receiving',
           gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
           location: '门诊楼 4 层 C 区',
@@ -184,6 +203,7 @@ export default {
           category: '非手术科室',
           tagline: '肾功能异常、尿检异常和透析前后连续管理。',
           desc: '为肾炎、肾病综合征、慢性肾病患者提供规范化诊疗和随访。',
+          image: deptShenzangke,
           icon: 'el-icon-water-cup',
           gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
           location: '门诊楼 5 层 A 区',
@@ -200,6 +220,7 @@ export default {
           category: '非手术科室',
           tagline: '儿童常见病、成长发育评估和儿童专科随访。',
           desc: '覆盖发热咳嗽、消化问题、儿童保健、过敏与哮喘等儿童健康需求。',
+          image: deptErke,
           icon: 'el-icon-s-home',
           gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
           location: '儿科门诊 2 层',
@@ -216,6 +237,7 @@ export default {
           category: '手术科室',
           tagline: '腹部、甲状腺、乳腺及疝外科诊疗。',
           desc: '提供术前评估、日间手术预约、术后复查及伤口管理。',
+          image: deptWaike,
           icon: 'el-icon-s-operation',
           gradient: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
           location: '外科门诊 2 层 A 区',
@@ -232,6 +254,7 @@ export default {
           category: '手术科室',
           tagline: '骨关节损伤、脊柱疾病和运动医学康复。',
           desc: '开展骨折、颈肩腰腿痛、关节退变和运动损伤综合评估。',
+          image: deptGuKe,
           icon: 'el-icon-guide',
           gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
           location: '外科门诊 3 层 B 区',
@@ -248,6 +271,7 @@ export default {
           category: '手术科室',
           tagline: '妇科疾病、围产保健和产后康复。',
           desc: '提供妇科常见病诊疗、孕产期管理、盆底康复和计划生育咨询。',
+          image: deptFuchanke,
           icon: 'el-icon-s-female',
           gradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
           location: '妇产中心 2 层',
@@ -264,6 +288,7 @@ export default {
           category: '诊断相关科室',
           tagline: 'CT、DR、MRI、超声检查和影像诊断报告。',
           desc: '支持检查预约、影像调阅、疑难影像会诊和报告在线查询。',
+          image: deptYingxiang,
           icon: 'el-icon-picture-outline',
           gradient: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)',
           location: '医技楼 1 层',
@@ -280,6 +305,7 @@ export default {
           category: '诊断相关科室',
           tagline: '临床检验、样本采集和检验报告解读。',
           desc: '提供血液、尿液、生化、免疫、微生物等检验项目和报告咨询。',
+          image: deptJianyanke,
           icon: 'el-icon-files',
           gradient: 'linear-gradient(135deg, #fddb92 0%, #d1fdff 100%)',
           location: '医技楼 2 层',
@@ -296,6 +322,7 @@ export default {
           category: '诊断相关科室',
           tagline: '体检套餐、健康评估和慢病风险管理。',
           desc: '面向个人、家庭和企事业单位提供体检、复查提醒和健康档案服务。',
+          image: deptJiankang,
           icon: 'el-icon-medal',
           gradient: 'linear-gradient(135deg, #96fbc4 0%, #f9f586 100%)',
           location: '健康管理楼 1 层',
@@ -399,6 +426,13 @@ $primary-light: #20a978;
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(8px);
+    overflow: hidden;
+
+    .dept-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
 
     i {
       font-size: 32px;
@@ -475,6 +509,13 @@ $primary-light: #20a978;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+
+      .detail-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
 
       i {
         font-size: 40px;
