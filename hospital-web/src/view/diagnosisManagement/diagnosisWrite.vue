@@ -23,6 +23,25 @@
             <p><b>检查：</b>{{ selectedImaging.type }} / {{ selectedImaging.bodyPart }}</p>
             <p><b>时间：</b>{{ selectedImaging.uploadTime }}</p>
             <p><b>说明：</b>{{ selectedImaging.remark }}</p>
+            <div class="archive-summary" v-if="selectedImaging.medsamResult">
+              <div class="archive-title">影像标注归档</div>
+              <div class="archive-line">
+                <span>模式</span>
+                <strong>{{ selectedImaging.medsamResult.workflowMode === 'manual-first' ? '人工标注' : '模型辅助' }}</strong>
+              </div>
+              <div class="archive-line">
+                <span>标注数</span>
+                <strong>{{ getManualCount(selectedImaging.medsamResult) }} 条</strong>
+              </div>
+              <div class="archive-line">
+                <span>测量</span>
+                <strong>{{ getMeasurementText(selectedImaging.medsamResult) }}</strong>
+              </div>
+              <div class="archive-line">
+                <span>数据/标注</span>
+                <strong>{{ getVolumePairText(selectedImaging.medsamResult) }}</strong>
+              </div>
+            </div>
             <el-button type="text" icon="el-icon-view" @click="viewImaging">查看完整片子</el-button>
           </div>
           <el-empty v-else description="请先选择患者和影像"></el-empty>
@@ -117,6 +136,7 @@ export default {
         examinationFindings: '',
         diagnosticOpinion: '',
         treatment: '',
+        medsamResult: null,
         reportStatus: 'draft'
       },
       rules: {
@@ -183,7 +203,8 @@ export default {
         imagingId: imaging.id,
         examinationType: imaging.type,
         bodyPart: imaging.bodyPart,
-        clinicalDiagnosis: this.diagnosisForm.clinicalDiagnosis || imaging.remark
+        clinicalDiagnosis: this.diagnosisForm.clinicalDiagnosis || imaging.remark,
+        medsamResult: this.diagnosisForm.medsamResult || imaging.medsamResult || null
       });
       this.applyViewerContext(imaging.id);
     },
@@ -195,7 +216,16 @@ export default {
         if (Number(context.imagingId) !== Number(imagingId)) return;
         Object.assign(this.diagnosisForm, {
           examinationFindings: this.diagnosisForm.examinationFindings || context.findings,
-          diagnosticOpinion: this.diagnosisForm.diagnosticOpinion || context.opinion
+          diagnosticOpinion: this.diagnosisForm.diagnosticOpinion || context.opinion,
+          medsamResult: {
+            promptBox: context.promptBox,
+            aiScore: context.aiScore,
+            measurements: context.measurements,
+            machineAnnotations: context.machineAnnotations || [],
+            manualAnnotations: context.manualAnnotations || [],
+            annotationMarks: context.annotationMarks || [],
+            workflowMode: 'manual-first'
+          }
         });
       } catch (e) {
         sessionStorage.removeItem(VIEWER_CONTEXT_KEY);
@@ -225,7 +255,8 @@ export default {
         ...this.diagnosisForm,
         id: this.diagnosisForm.id || Date.now(),
         reportStatus: status,
-        reportDate
+        reportDate,
+        medsamResult: this.diagnosisForm.medsamResult || (this.selectedImaging && this.selectedImaging.medsamResult) || null
       };
       const reportIndex = this.reports.findIndex(item => item.id === report.id);
       if (reportIndex >= 0) {
@@ -238,12 +269,30 @@ export default {
         this.imagings.splice(imagingIndex, 1, {
           ...this.imagings[imagingIndex],
           diagnosisStatus: status === 'submitted' ? 'completed' : 'pending',
+          radiologyStatus: status === 'submitted' ? '诊断报告已上传' : (this.imagings[imagingIndex].radiologyStatus || '已提交主治医生'),
           reportId: report.id
         });
       }
       localStorage.setItem(REPORT_KEY, JSON.stringify(this.reports));
       localStorage.setItem(IMAGING_KEY, JSON.stringify(this.imagings));
       return report;
+    },
+    getManualCount(result) {
+      if (!result) return 0;
+      if (result.annotationMarks) return result.annotationMarks.filter(item => item.type !== 'ruler').length;
+      if (result.manualAnnotations) return result.manualAnnotations.length;
+      return 0;
+    },
+    getMeasurementText(result) {
+      if (!result || !result.measurements) return '暂无';
+      return `${result.measurements.area || '-'} mm² / ${result.measurements.volume || '-'} cm³`;
+    },
+    getVolumePairText(result) {
+      if (!result) return '暂无';
+      const meta = result.datasetMeta || {};
+      const source = result.sourceVolume || meta.sourceVolume || {};
+      const label = result.labelVolume || meta.labelVolume || {};
+      return `${source.fileName || 'lung_001.nii.gz'} / ${label.fileName || 'lung_001.nii（标注）.gz'}`;
     },
     saveDraft() {
       if (!this.diagnosisForm.patientId || !this.diagnosisForm.imagingId) {
@@ -301,6 +350,33 @@ export default {
       margin: 10px 0;
       color: #4b5563;
       line-height: 1.6;
+    }
+  }
+
+  .archive-summary {
+    margin: 14px 0;
+    padding: 12px;
+    border: 1px solid #d8eee5;
+    border-radius: 8px;
+    background: #f0f9f5;
+
+    .archive-title {
+      color: #075f42;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .archive-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      color: #60756e;
+      font-size: 13px;
+
+      strong {
+        color: #24312d;
+      }
     }
   }
 

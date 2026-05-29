@@ -55,6 +55,35 @@
         <i class="el-icon-picture-outline"></i>
         <span>{{ imagingData.type }} - {{ imagingData.bodyPart }} - {{ imagingData.uploadTime }}</span>
       </div>
+      <div class="ai-archive" v-if="medsamResult">
+        <div class="archive-title">{{ getArchiveTitle(medsamResult) }}</div>
+        <div class="archive-grid">
+          <div>
+            <span>Prompt</span>
+            <strong>{{ getPromptText(medsamResult) }}</strong>
+          </div>
+          <div>
+            <span>人工标注</span>
+            <strong>{{ getManualCount(medsamResult) }} 条</strong>
+          </div>
+          <div>
+            <span>归档模式</span>
+            <strong>{{ medsamResult.workflowMode === 'manual-first' ? '人工优先' : '模型辅助' }}</strong>
+          </div>
+          <div>
+            <span>测量</span>
+            <strong>{{ getMeasurementText(medsamResult) }}</strong>
+          </div>
+          <div>
+            <span>数据文件</span>
+            <strong>{{ getVolumeFile(medsamResult, 'source') }}</strong>
+          </div>
+          <div>
+            <span>标注文件</span>
+            <strong>{{ getVolumeFile(medsamResult, 'label') }}</strong>
+          </div>
+        </div>
+      </div>
       <div class="no-imaging" v-else>暂无关联影像</div>
     </el-card>
   </div>
@@ -72,6 +101,11 @@ export default {
       imagingData: {}
     }
   },
+  computed: {
+    medsamResult() {
+      return this.diagnosisData.medsamResult || this.imagingData.medsamResult || null;
+    }
+  },
   methods: {
     goBack() {
       this.$router.push('/diagnosisList');
@@ -85,7 +119,7 @@ export default {
     },
     viewImaging() {
       if (this.diagnosisData.imagingId) {
-        this.$router.push({ path: '/imagingDetail', query: { id: this.diagnosisData.imagingId } });
+        this.$router.push({ path: '/imagingViewer', query: { id: this.diagnosisData.imagingId } });
       }
     },
     handleEdit() {
@@ -95,6 +129,31 @@ export default {
     },
     handlePrint() {
       window.print();
+    },
+    getArchiveTitle(result) {
+      if (!result) return '影像标注归档';
+      return result.workflowMode === 'manual-first' ? '人工分割标注归档' : 'MedSAM 分割归档';
+    },
+    getPromptText(result) {
+      if (!result || !result.promptBox) return '暂无 Box';
+      return `Box x=${result.promptBox.x}, y=${result.promptBox.y}, w=${result.promptBox.w}, h=${result.promptBox.h}`;
+    },
+    getManualCount(result) {
+      if (!result) return 0;
+      if (result.annotationMarks) return result.annotationMarks.filter(item => item.type !== 'ruler').length;
+      if (result.manualAnnotations) return result.manualAnnotations.length;
+      return 0;
+    },
+    getMeasurementText(result) {
+      if (!result || !result.measurements) return '暂无';
+      return `${result.measurements.area || '-'} mm² / ${result.measurements.volume || '-'} cm³`;
+    },
+    getVolumeFile(result, type) {
+      if (!result) return '暂无';
+      const meta = result.datasetMeta || {};
+      const source = result.sourceVolume || meta.sourceVolume || {};
+      const label = result.labelVolume || meta.labelVolume || {};
+      return type === 'source' ? (source.fileName || 'lung_001.nii.gz') : (label.fileName || 'lung_001.nii（标注）.gz');
     }
   },
   created() {
@@ -177,6 +236,44 @@ export default {
     span {
       font-size: 14px;
       color: #333;
+    }
+  }
+
+  .ai-archive {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f0f9f5;
+    border: 1px solid #d8eee5;
+    border-radius: 8px;
+
+    .archive-title {
+      color: #075f42;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .archive-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+
+      div {
+        background: #fff;
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+
+      span {
+        display: block;
+        color: #6b7280;
+        font-size: 12px;
+        margin-bottom: 6px;
+      }
+
+      strong {
+        color: #24312d;
+        font-size: 13px;
+      }
     }
   }
 

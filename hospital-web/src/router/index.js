@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 
 import layout from '@/layout/layout'
+import imagingViewer from '@/view/imagingManagement/imagingViewer'
 Vue.use(VueRouter)
 
 // 公共页面 - 不需要登录即可访问
@@ -37,54 +38,24 @@ export let constantRouterMap = [{
 // 医生路由
 export const doctorRouterMap = [
   {
-    path: '/patientManagement',
+    path: '/doctor',
     component: layout,
-    redirect: '/appointDetail',
-    meta: {title: '患者管理', icon: 'el-icon-user'},
+    redirect: '/doctorDashboard',
+    meta: {title: '医生工作台', icon: 'el-icon-s-custom'},
     children: [{
-      path: '/appointDetail',
-      component: () => import('@/view/patientManagement/appointDetail/appointDetail'),
-      meta: {title: '预约详情', icon: 'el-icon-user'}
-    }, {
-      path: '/patientMedicalRecord',
-      component: () => import('@/view/patientManagement/appointDetail/patientMedicalRecord'),
-      meta: {title: '患者详情', icon: 'el-icon-user'},
-      hidden: true
+      path: '/doctorDashboard',
+      component: () => import('@/view/doctorManagement/doctorDashboard'),
+      meta: {title: '工作台', icon: 'el-icon-s-custom'}
     }]
   }, {
-    path: '/outCallManagement',
+    path: '/radiologyResults',
     component: layout,
-    redirect: '/outCallDetail',
-    meta: {title: '出诊管理', icon: 'el-icon-s-cooperation'},
+    redirect: '/radiologyResultList',
+    meta: {title: '放射科结果', icon: 'el-icon-picture-outline'},
     children: [{
-      path: '/outCallDetail',
-      component: () => import('@/view/outCallManagement/outCallDetail'),
-      meta: {title: '出诊详情', icon: 'el-icon-user'}
-    }]
-  }, {
-    path: '/imagingManagement',
-    component: layout,
-    redirect: '/imagingList',
-    meta: {title: '影像管理', icon: 'el-icon-picture'},
-    children: [{
-      path: '/imagingList',
-      component: () => import('@/view/imagingManagement/imagingList'),
-      meta: {title: '影像列表', icon: 'el-icon-picture'}
-    }, {
-      path: '/imagingUpload',
-      component: () => import('@/view/imagingManagement/imagingUpload'),
-      meta: {title: '上传影像', icon: 'el-icon-upload'},
-      hidden: true
-    }, {
-      path: '/imagingDetail',
-      component: () => import('@/view/imagingManagement/imagingDetail'),
-      meta: {title: '影像详情', icon: 'el-icon-view'},
-      hidden: true
-    }, {
-      path: '/imagingViewer',
-      component: () => import('@/view/imagingManagement/imagingViewer'),
-      meta: {title: '影像查看器', icon: 'el-icon-view'},
-      hidden: true
+      path: '/radiologyResultList',
+      component: () => import('@/view/diagnosisManagement/radiologyResultList'),
+      meta: {title: '影像诊断结果', icon: 'el-icon-picture-outline'}
     }]
   }, {
     path: '/diagnosisManagement',
@@ -104,11 +75,6 @@ export const doctorRouterMap = [
       path: '/diagnosisDetail',
       component: () => import('@/view/diagnosisManagement/diagnosisDetail'),
       meta: {title: '诊断详情', icon: 'el-icon-view'},
-      hidden: true
-    }, {
-      path: '/diagnosisReports',
-      component: () => import('@/view/diagnosisManagement/diagnosisReports'),
-      meta: {title: '诊断报告', icon: 'el-icon-document'},
       hidden: true
     }]
   },
@@ -194,28 +160,8 @@ export const radiologistRouterMap = [
       hidden: true
     }, {
       path: '/imagingViewer',
-      component: () => import('@/view/imagingManagement/imagingViewer'),
+      component: imagingViewer,
       meta: {title: '影像查看器', icon: 'el-icon-view'},
-      hidden: true
-    }]
-  }, {
-    path: '/diagnosisManagement',
-    component: layout,
-    redirect: '/diagnosisReports',
-    meta: {title: '诊断管理', icon: 'el-icon-document-checked'},
-    children: [{
-      path: '/diagnosisReports',
-      component: () => import('@/view/diagnosisManagement/diagnosisReports'),
-      meta: {title: '诊断报告', icon: 'el-icon-document'}
-    }, {
-      path: '/diagnosisWrite',
-      component: () => import('@/view/diagnosisManagement/diagnosisWrite'),
-      meta: {title: '填写诊断', icon: 'el-icon-edit'},
-      hidden: true
-    }, {
-      path: '/diagnosisDetail',
-      component: () => import('@/view/diagnosisManagement/diagnosisDetail'),
-      meta: {title: '诊断详情', icon: 'el-icon-view'},
       hidden: true
     }]
   },
@@ -339,7 +285,7 @@ export const systemRouterMap = [
       hidden: true
     }, {
       path: '/imagingViewer',
-      component: () => import('@/view/imagingManagement/imagingViewer'),
+      component: imagingViewer,
       meta: {title: '影像查看器', icon: 'el-icon-view'},
       hidden: true
     }]
@@ -382,7 +328,16 @@ export const systemRouterMap = [
   {path: '*', redirect: '/404', hidden: true}
 ];
 
-export default new VueRouter({
+const createRouter = () => new VueRouter({
   scrollBehavior: () => ({ y: 0 }),
   routes: publicRouterMap
 });
+
+const router = createRouter();
+
+export function resetRouter() {
+  const newRouter = createRouter();
+  router.matcher = newRouter.matcher;
+}
+
+export default router;

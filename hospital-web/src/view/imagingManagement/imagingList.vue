@@ -82,7 +82,7 @@ const IMAGING_KEY = 'ylz_demo_imagings';
 const REPORT_KEY = 'ylz_demo_reports';
 
 const defaultImagings = [
-  { id: 10001, patientId: 30001, patientName: '张明', gender: '男', age: 46, phone: '13810010001', type: 'X光', bodyPart: '胸部', uploadTime: '2026-05-26 09:20:00', doctorName: '林医生', fileSize: '2.8MB', diagnosisStatus: 'pending', remark: '咳嗽伴低热，胸部正侧位片。' },
+  { id: 10001, patientId: 30001, patientName: '张明', gender: '男', age: 46, phone: '13810010001', type: 'CT', bodyPart: '胸部', uploadTime: '2026-05-26 09:20:00', doctorName: '沈放射', fileSize: '114.8MB', diagnosisStatus: 'pending', radiologyStatus: '待标注', remark: '胸部 CT 肺窗薄层扫描，已导入 lung_001.nii.gz，需完成肺部病灶人工标注。' },
   { id: 10002, patientId: 30002, patientName: '李娜', gender: '女', age: 33, phone: '13810010002', type: 'CT', bodyPart: '头颅', uploadTime: '2026-05-26 10:15:00', doctorName: '林医生', fileSize: '18.4MB', diagnosisStatus: 'completed', reportId: 20001, remark: '头痛一周，头颅CT平扫。' },
   { id: 10003, patientId: 30003, patientName: '周强', gender: '男', age: 58, phone: '13810010003', type: 'MRI', bodyPart: '腰椎', uploadTime: '2026-05-25 15:40:00', doctorName: '韩医生', fileSize: '35.6MB', diagnosisStatus: 'pending', remark: '腰痛伴左下肢放射痛。' },
   { id: 10004, patientId: 30004, patientName: '赵敏', gender: '女', age: 41, phone: '13810010004', type: '超声', bodyPart: '腹部', uploadTime: '2026-05-24 14:05:00', doctorName: '韩医生', fileSize: '6.1MB', diagnosisStatus: 'completed', reportId: 20002, remark: '右上腹不适，腹部超声检查。' },
@@ -125,7 +125,18 @@ export default {
     },
     loadData() {
       this.ensureDemoData();
-      this.tableData = JSON.parse(localStorage.getItem(IMAGING_KEY) || '[]');
+      this.tableData = JSON.parse(localStorage.getItem(IMAGING_KEY) || '[]').map(item => {
+        if (Number(item.id) !== 10001) return item;
+        return Object.assign({}, item, {
+          type: 'CT',
+          bodyPart: '胸部',
+          doctorName: item.doctorName || '沈放射',
+          fileSize: '114.8MB',
+          radiologyStatus: item.radiologyStatus || '待标注',
+          remark: item.remark && item.remark.indexOf('lung_001') !== -1 ? item.remark : defaultImagings[0].remark
+        });
+      });
+      localStorage.setItem(IMAGING_KEY, JSON.stringify(this.tableData));
       this.handleSearch();
     },
     getTypeTag(type) {

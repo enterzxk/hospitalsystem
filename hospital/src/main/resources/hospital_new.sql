@@ -246,6 +246,49 @@ CREATE TABLE `report_imaging_relation` (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '报告影像关联表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- 影像标注表：保存 MedSAM 机器标注与医生人工标注
+-- ----------------------------
+DROP TABLE IF EXISTS `imaging_annotation`;
+CREATE TABLE `imaging_annotation` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '标注编号',
+    `imaging_id` bigint(20) NOT NULL COMMENT '影像编号',
+    `doctor_id` bigint(20) NULL DEFAULT NULL COMMENT '标注医生编号',
+    `annotation_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '标注类型：box/mask/brush/erase',
+    `annotation_data` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '标注数据(JSON)，包含 prompt、mask、slice 等',
+    `label` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '标注标签',
+    `color` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '显示颜色',
+    `gmt_create` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    INDEX `idx_imaging_id` (`imaging_id`) USING BTREE,
+    INDEX `idx_doctor_id` (`doctor_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 10001 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '影像标注表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- MedSAM 分割任务表：保存模型 prompt、评分和测量结果
+-- ----------------------------
+DROP TABLE IF EXISTS `medsam_segmentation_task`;
+CREATE TABLE `medsam_segmentation_task` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '任务编号',
+    `imaging_id` bigint(20) NOT NULL COMMENT '影像编号',
+    `patient_id` bigint(20) NOT NULL COMMENT '患者编号',
+    `operator_doctor_id` bigint(20) NULL DEFAULT NULL COMMENT '放射科医生编号',
+    `model_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'MedSAM' COMMENT '模型名称',
+    `prompt_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'prompt类型：box/point',
+    `prompt_data` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'prompt数据(JSON)',
+    `mask_data` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'mask数据(JSON或文件地址)',
+    `confidence` decimal(5, 4) NULL DEFAULT NULL COMMENT '模型置信度',
+    `dice_estimate` decimal(5, 4) NULL DEFAULT NULL COMMENT 'Dice估计值',
+    `area_mm2` decimal(10, 2) NULL DEFAULT NULL COMMENT '面积',
+    `volume_cm3` decimal(10, 2) NULL DEFAULT NULL COMMENT '体积',
+    `task_status` int(11) NOT NULL DEFAULT 0 COMMENT '状态：0待标注；1已分割；2人工修正；3已提交主治医生',
+    `gmt_create` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
+    `gmt_modified` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '更新时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    INDEX `idx_imaging_id` (`imaging_id`) USING BTREE,
+    INDEX `idx_patient_id` (`patient_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 10001 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'MedSAM分割任务表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- 就诊记录表
 -- ----------------------------
 DROP TABLE IF EXISTS `visit_record`;
@@ -396,7 +439,8 @@ CREATE TABLE `log_operation` (
 INSERT INTO `power_role` (`id`, `name`, `description`, `gmt_create`, `gmt_modified`) VALUES
 (1, '系统管理员', '系统管理员，拥有所有权限', NOW(), NOW()),
 (2, '医生', '医生，可以查看患者、诊断、开具报告', NOW(), NOW()),
-(3, '患者', '患者，可以查看自己的就诊记录和报告', NOW(), NOW());
+(3, '患者', '患者，可以查看自己的就诊记录和报告', NOW(), NOW()),
+(4, '放射科医生', '放射科医生，负责MedSAM影像分割、机器标注和人工修正', NOW(), NOW());
 
 -- 初始化测试账号
 -- 前端会先 SHA256 加密明文密码，后端再使用 BCrypt 校验，这里存储的是 SHA256 后字符串的 BCrypt 值。
@@ -405,6 +449,7 @@ INSERT INTO `power_account` (`id`, `name`, `password`, `role_id`, `gmt_create`, 
 (1001, 'doctor1', '$2a$10$Y8JczZW5a8R0ajygnhNYHO3wbrtNChG8Np7otitAMn0g43p5UT9ZC', 2, NOW(), NOW()),
 (1002, 'doctor2', '$2a$10$e5kPah/Adaf59rhYv8UUpuydluURQ2jlV3WxDEDs2bsMgzJpxmt1u', 2, NOW(), NOW()),
 (1005, 'doctor3', '$2a$10$Y8JczZW5a8R0ajygnhNYHO3wbrtNChG8Np7otitAMn0g43p5UT9ZC', 2, NOW(), NOW()),
+(1008, 'radiologist1', '$2a$10$Y8JczZW5a8R0ajygnhNYHO3wbrtNChG8Np7otitAMn0g43p5UT9ZC', 4, NOW(), NOW()),
 (1003, 'patient1', '$2a$10$Y8JczZW5a8R0ajygnhNYHO3wbrtNChG8Np7otitAMn0g43p5UT9ZC', 3, NOW(), NOW()),
 (1004, 'patient2', '$2a$10$Ah0XaOc/uEDQjvWzySygieTRfHuzHcv1NCTebrtNfu.uS4b/Av6SS', 3, NOW(), NOW()),
 (1006, 'patient3', '$2a$10$Y8JczZW5a8R0ajygnhNYHO3wbrtNChG8Np7otitAMn0g43p5UT9ZC', 3, NOW(), NOW()),
@@ -412,7 +457,7 @@ INSERT INTO `power_account` (`id`, `name`, `password`, `role_id`, `gmt_create`, 
 
 -- 初始化账号角色关联
 INSERT INTO `power_account_role_relation` (`account_id`, `role_id`) VALUES
-(1000, 1), (1001, 2), (1002, 2), (1005, 2), (1003, 3), (1004, 3), (1006, 3), (1007, 3);
+(1000, 1), (1001, 2), (1002, 2), (1005, 2), (1008, 4), (1003, 3), (1004, 3), (1006, 3), (1007, 3);
 
 -- 初始化医院信息
 INSERT INTO `hospital_info` (`id`, `name`, `phone`, `address`, `description`, `picture`, `gmt_create`, `gmt_modified`) VALUES
@@ -432,7 +477,8 @@ INSERT INTO `hospital_special` (`id`, `name`, `description`, `gmt_create`, `gmt_
 (10007, '泌尿科', '泌尿系统疾病诊治', NOW(), NOW()),
 (10008, '妇科', '妇科疾病诊治', NOW(), NOW()),
 (10009, '儿科', '儿科疾病诊治', NOW(), NOW()),
-(10010, '眼科', '眼科疾病诊治', NOW(), NOW());
+(10010, '眼科', '眼科疾病诊治', NOW(), NOW()),
+(10011, '医学影像科', 'CT、MRI、X光、超声检查与AI辅助影像标注', NOW(), NOW());
 
 -- 初始化门诊
 INSERT INTO `hospital_outpatient` (`id`, `name`, `special_id`, `gmt_create`, `gmt_modified`) VALUES
@@ -447,7 +493,8 @@ INSERT INTO `hospital_outpatient` (`id`, `name`, `special_id`, `gmt_create`, `gm
 (10008, '泌尿科门诊', 10007, NOW(), NOW()),
 (10009, '妇科门诊', 10008, NOW(), NOW()),
 (10010, '儿科门诊', 10009, NOW(), NOW()),
-(10011, '眼科门诊', 10010, NOW(), NOW());
+(10011, '眼科门诊', 10010, NOW(), NOW()),
+(10012, '医学影像门诊', 10011, NOW(), NOW());
 
 -- 初始化医院专科关系
 INSERT INTO `hospital_special_relation` (`hospital_id`, `special_id`, `gmt_create`, `gmt_modified`) VALUES
@@ -465,7 +512,8 @@ INSERT INTO `hospital_outpatient_relation` (`hospital_id`, `outpatient_id`, `gmt
 INSERT INTO `hospital_doctor` (`id`, `account_id`, `name`, `gender`, `job_title`, `specialty`, `special_id`, `outpatient_id`, `hospital_id`, `gmt_create`, `gmt_modified`) VALUES
 (10001, 1001, '林医生', 1, '主任医师', '擅长呼吸系统疾病、胸部影像判读和慢病随访管理', 10005, 10006, 1000, NOW(), NOW()),
 (10002, 1002, '韩医生', 2, '副主任医师', '擅长骨科疾病诊治、脊柱MRI判读和康复方案制定', 10002, 10003, 1000, NOW(), NOW()),
-(10003, 1005, '许医生', 1, '主治医师', '擅长消化系统疾病、腹部超声和门诊综合诊疗', 10006, 10007, 1000, NOW(), NOW());
+(10003, 1005, '许医生', 1, '主治医师', '擅长消化系统疾病、腹部超声和门诊综合诊疗', 10006, 10007, 1000, NOW(), NOW()),
+(10004, 1008, '沈放射', 1, '主治医师', '擅长CT、MRI阅片、MedSAM自动分割和人工标注修正', 10011, 10012, 1000, NOW(), NOW());
 
 -- 初始化患者信息
 INSERT INTO `patient_info` (`id`, `account_id`, `name`, `gender`, `phone`, `id_card`, `birth_date`, `address`, `blood_type`, `allergy_history`, `medical_history`, `gmt_create`, `gmt_modified`) VALUES
@@ -493,6 +541,16 @@ INSERT INTO `diagnosis_report` (`id`, `patient_id`, `doctor_id`, `hospital_id`, 
 INSERT INTO `report_imaging_relation` (`report_id`, `imaging_id`, `gmt_create`) VALUES
 (20001, 10002, NOW()),
 (20002, 10004, NOW());
+
+-- 初始化 MedSAM 分割与标注归档
+INSERT INTO `medsam_segmentation_task` (`id`, `imaging_id`, `patient_id`, `operator_doctor_id`, `model_name`, `prompt_type`, `prompt_data`, `mask_data`, `confidence`, `dice_estimate`, `area_mm2`, `volume_cm3`, `task_status`, `gmt_create`, `gmt_modified`) VALUES
+(10001, 10001, 30001, 10004, 'MedSAM', 'box', '{"x":156,"y":89,"w":234,"h":187,"slice":42,"series":"序列3"}', '{"maskType":"ellipse","center":[278,186],"rx":80,"ry":52}', 0.9300, 0.9100, 342.50, 12.80, 3, '2026-05-26 10:20:00', NOW()),
+(10002, 10003, 30003, 10004, 'MedSAM', 'box', '{"x":142,"y":96,"w":210,"h":168,"slice":36,"series":"序列2"}', '{"maskType":"ellipse","center":[247,180],"rx":72,"ry":48}', 0.9000, 0.8800, 298.20, 10.60, 1, '2026-05-25 16:10:00', NOW());
+
+INSERT INTO `imaging_annotation` (`id`, `imaging_id`, `doctor_id`, `annotation_type`, `annotation_data`, `label`, `color`, `gmt_create`) VALUES
+(10001, 10001, 10004, 'mask', '{"source":"machine","modelName":"MedSAM","promptBox":{"x":156,"y":89,"w":234,"h":187},"slice":42,"confidence":0.93,"dice":0.91}', 'AI分割结果', '#18bc7e', '2026-05-26 10:20:00'),
+(10002, 10001, 10004, 'brush', '{"source":"manual","tool":"brush","x":288,"y":190,"r":18,"slice":42}', '人工补画', '#22c55e', '2026-05-26 10:24:00'),
+(10003, 10003, 10004, 'mask', '{"source":"machine","modelName":"MedSAM","promptBox":{"x":142,"y":96,"w":210,"h":168},"slice":36,"confidence":0.90,"dice":0.88}', 'AI分割结果', '#18bc7e', '2026-05-25 16:10:00');
 
 -- 初始化就诊记录
 INSERT INTO `visit_record` (`id`, `patient_id`, `doctor_id`, `hospital_id`, `special_id`, `outpatient_id`, `visit_date`, `symptoms`, `diagnosis`, `treatment_plan`, `prescription`, `visit_status`, `gmt_create`, `gmt_modified`) VALUES

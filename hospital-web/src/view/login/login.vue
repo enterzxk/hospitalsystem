@@ -124,6 +124,7 @@
   import Cookie from "js-cookie";
   import {getCookie, setCookie} from "@/utils/cookies";
   import {setToken} from "@/utils/auth";
+  import {resetPermission} from "@/permission";
 
   export default {
     name: "login",
@@ -188,6 +189,7 @@
         setCookie("username", this.ruleForm2.username, expires);
         sessionStorage.setItem('username', this.ruleForm2.username);
         sessionStorage.setItem('accountID', this.ruleForm2.username);
+        resetPermission();
         if (this.checked) {
           setCookie("password", this.ruleForm2.password, 15);
         } else {

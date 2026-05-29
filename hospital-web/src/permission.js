@@ -1,4 +1,4 @@
-import router from './router'
+import router, { resetRouter } from './router'
 import store from './store'
 import NProgress from 'nprogress'
 import { getToken } from '@/utils/auth'
@@ -32,6 +32,7 @@ export function getPermission() {
 export function resetPermission() {
   routesLoaded = false;
   router.options.routes = publicRouterMap.slice();
+  resetRouter();
 }
 
 // 路由守卫

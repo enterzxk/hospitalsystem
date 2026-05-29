@@ -72,7 +72,6 @@
             </div>
             <div class="preview-actions">
               <el-button type="primary" icon="el-icon-view" @click="openViewer">打开查看器</el-button>
-              <el-button type="success" icon="el-icon-edit" @click="startDiagnosis">开始诊断</el-button>
             </div>
           </div>
           <div v-else class="empty-preview">
@@ -93,37 +92,49 @@
               <i class="el-icon-upload2"></i>
               <span>上传影像</span>
             </el-button>
-            <el-button class="action-btn" @click="goToMyReports">
-              <i class="el-icon-document"></i>
-              <span>我的报告</span>
-            </el-button>
-            <el-button class="action-btn" @click="goToHistory">
-              <i class="el-icon-time"></i>
-              <span>诊断历史</span>
-            </el-button>
-            <el-button class="action-btn" @click="goToStatistics">
-              <i class="el-icon-data-line"></i>
-              <span>工作统计</span>
+            <el-button class="action-btn" @click="goToViewerList">
+              <i class="el-icon-view"></i>
+              <span>影像浏览</span>
             </el-button>
           </div>
         </el-card>
 
-        <el-card class="stats-card" style="margin-top: 20px">
+        <el-card class="tumor-card" style="margin-top: 20px">
           <div slot="header">
-            <span>今日统计</span>
+            <span>肿瘤切片参考</span>
           </div>
-          <div class="stats-list">
-            <div class="stat-item">
-              <div class="stat-value">{{ stats.todayTotal }}</div>
-              <div class="stat-label">今日总量</div>
+          <div class="tumor-reference">
+            <div class="tumor-slice">
+              <div class="slice-visual lung-slice">
+                <div class="slice-overlay">
+                  <span class="slice-label">肺窗</span>
+                </div>
+                <div class="tumor-region"></div>
+              </div>
+              <span class="slice-title">肺部 CT 薄层</span>
             </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ stats.todayDiagnosed }}</div>
-              <div class="stat-label">已诊断</div>
+            <div class="tumor-slice">
+              <div class="slice-visual brain-slice">
+                <div class="slice-overlay">
+                  <span class="slice-label">增强</span>
+                </div>
+                <div class="tumor-region brain-region"></div>
+              </div>
+              <span class="slice-title">头颅 MRI</span>
             </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ stats.todayPending }}</div>
-              <div class="stat-label">待诊断</div>
+            <div class="tumor-info">
+              <div class="info-row">
+                <span class="info-label">标注工具</span>
+                <span class="info-value">框选 / 画笔 / 擦除</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">AI 辅助</span>
+                <span class="info-value">MedSAM 一键分割</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">导出格式</span>
+                <span class="info-value">JSON / NIfTI Mask</span>
+              </div>
             </div>
           </div>
         </el-card>
@@ -137,7 +148,7 @@ import { getImagingList } from '@/api/imaging'
 
 const IMAGING_KEY = 'ylz_demo_imagings'
 const defaultImagings = [
-  { id: 10001, patientId: 30001, patientName: '张明', gender: '男', age: 46, phone: '13810010001', type: 'X光', bodyPart: '胸部', uploadTime: '2026-05-26 09:20:00', doctorName: '林医生', fileSize: '2.8MB', diagnosisStatus: 'pending', remark: '咳嗽伴低热，胸部正侧位片。' },
+  { id: 10001, patientId: 30001, patientName: '张明', gender: '男', age: 46, phone: '13810010001', type: 'CT', bodyPart: '胸部', uploadTime: '2026-05-26 09:20:00', doctorName: '沈放射', fileSize: '114.8MB', diagnosisStatus: 'pending', radiologyStatus: '待标注', remark: '胸部 CT 肺窗薄层扫描，已导入 lung_001.nii.gz，需完成肺部病灶人工标注。' },
   { id: 10002, patientId: 30002, patientName: '李娜', gender: '女', age: 33, phone: '13810010002', type: 'CT', bodyPart: '头颅', uploadTime: '2026-05-26 10:15:00', doctorName: '林医生', fileSize: '18.4MB', diagnosisStatus: 'completed', reportId: 20001, remark: '头痛一周，头颅CT平扫。' },
   { id: 10003, patientId: 30003, patientName: '周强', gender: '男', age: 58, phone: '13810010003', type: 'MRI', bodyPart: '腰椎', uploadTime: '2026-05-25 15:40:00', doctorName: '韩医生', fileSize: '35.6MB', diagnosisStatus: 'pending', remark: '腰痛伴左下肢放射痛。' },
   { id: 10005, patientId: 30005, patientName: '陈晨', gender: '男', age: 27, phone: '13810010005', type: 'CT', bodyPart: '胸部', uploadTime: '2026-05-23 11:30:00', doctorName: '林医生', fileSize: '22.0MB', diagnosisStatus: 'pending', remark: '胸闷气短，胸部CT薄层扫描。' }
@@ -177,7 +188,18 @@ export default {
       try {
         const saved = localStorage.getItem(IMAGING_KEY)
         if (saved) {
-          return JSON.parse(saved)
+          const list = JSON.parse(saved)
+          return list.map(item => {
+            if (Number(item.id) !== 10001) return item
+            return Object.assign({}, item, {
+              type: 'CT',
+              bodyPart: '胸部',
+              doctorName: item.doctorName || '沈放射',
+              fileSize: '114.8MB',
+              radiologyStatus: item.radiologyStatus || '待标注',
+              remark: item.remark && item.remark.indexOf('lung_001') !== -1 ? item.remark : defaultImagings[0].remark
+            })
+          })
         }
       } catch (e) {
         localStorage.removeItem(IMAGING_KEY)
@@ -252,28 +274,12 @@ export default {
       })
     },
 
-    startDiagnosis() {
-      if (!this.selectedImaging) return
-      this.$router.push({
-        path: '/diagnosisWrite',
-        query: { imagingId: this.selectedImaging.id }
-      })
-    },
-
     goToUpload() {
       this.$router.push('/imagingUpload')
     },
 
-    goToMyReports() {
-      this.$router.push('/diagnosisList')
-    },
-
-    goToHistory() {
-      this.$router.push('/diagnosisList')
-    },
-
-    goToStatistics() {
-      this.$message.info('统计功能开发中')
+    goToViewerList() {
+      this.$router.push('/imagingList')
     }
   }
 }
@@ -523,6 +529,121 @@ export default {
       font-size: 12px;
       color: #999;
       margin-top: 5px;
+    }
+  }
+}
+
+.tumor-reference {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tumor-slice {
+  text-align: center;
+
+  .slice-title {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-top: 6px;
+  }
+}
+
+.slice-visual {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.lung-slice {
+  background:
+    radial-gradient(circle at 45% 50%, rgba(200, 210, 220, 0.6), rgba(100, 120, 140, 0.3) 40%, rgba(30, 40, 50, 0.9) 70%),
+    linear-gradient(180deg, #1a2332, #0d1520);
+}
+
+.brain-slice {
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(180, 190, 200, 0.5), rgba(80, 100, 120, 0.3) 35%, rgba(20, 30, 40, 0.92) 65%),
+    linear-gradient(135deg, #1e293b, #0f172a);
+}
+
+.slice-overlay {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+
+  .slice-label {
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(64, 158, 255, 0.85);
+    color: white;
+    font-size: 11px;
+  }
+}
+
+.tumor-region {
+  position: absolute;
+  width: 35%;
+  height: 40%;
+  top: 30%;
+  left: 38%;
+  border: 2px solid rgba(255, 82, 82, 0.8);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 82, 82, 0.2), transparent 70%);
+
+  &::after {
+    content: '病灶';
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #ff5252;
+    white-space: nowrap;
+  }
+}
+
+.brain-region {
+  width: 28%;
+  height: 30%;
+  top: 35%;
+  left: 40%;
+  border-color: rgba(255, 193, 7, 0.8);
+  background: radial-gradient(circle, rgba(255, 193, 7, 0.2), transparent 70%);
+
+  &::after {
+    content: '异常区';
+    color: #ffc107;
+  }
+}
+
+.tumor-info {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 10px 12px;
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 12px;
+    border-bottom: 1px solid #eee;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      color: #999;
+    }
+
+    .info-value {
+      color: #333;
+      font-weight: 500;
     }
   }
 }

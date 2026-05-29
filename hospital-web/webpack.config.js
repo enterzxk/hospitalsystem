@@ -80,6 +80,13 @@ module.exports = {
         }
       },
       {
+        test: /\.nii.*$/,
+        loader: 'file-loader',
+        options: {
+          name: 'nifti/[name]-[hash:6].[ext]'
+        }
+      },
+      {
         test: /\.(eot|woff|ttf)$/,
         loader: 'file-loader',
         options: {
