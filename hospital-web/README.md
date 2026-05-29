@@ -171,13 +171,6 @@ node -v  # 应显示 v16.20.2
 | hospital-web | 本仓库 | 前端 Vue 管理系统 |
 | medsam-service | 本仓库 medsam-service/ | AI 分割服务（Python Flask） |
 
-## Contributors
-
-| 贡献者 | GitHub | 贡献内容 |
-|--------|--------|---------|
-| **enterzxk** | [@enterzxk](https://github.com/enterzxk) | 项目维护者 — 前端重构、角色权限系统、患者功能、影像标注、AI 集成 |
-| **YuJian95** | [@YuJian95](https://github.com/YuJian95) | 原项目作者 — 后端架构、数据库设计、基础功能 |
-
 ## License
 
 MIT License
