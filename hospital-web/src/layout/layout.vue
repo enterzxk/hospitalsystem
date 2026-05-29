@@ -5,7 +5,7 @@
       <div class="header-content">
         <div class="header-left">
           <div class="hospital-logo">
-            <img src="../../商标.png" alt="云岚宗医院" class="logo-img">
+            <img src="../../../商标.png" alt="云岚宗医院" class="logo-img">
           </div>
           <div class="hospital-info">
             <h1>云岚宗医院</h1>
