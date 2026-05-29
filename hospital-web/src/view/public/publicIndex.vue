@@ -4,7 +4,7 @@
       <div class="header-container">
         <button class="logo" type="button" @click="scrollToSection('top')">
           <div class="logo-icon">
-            <i class="el-icon-first-aid-kit"></i>
+            <img src="../../../商标.png" alt="云岚宗医院" class="logo-img">
           </div>
           <div class="logo-text">
             <h1>云岚宗医院</h1>
@@ -275,7 +275,7 @@
         <div class="footer-main">
           <button class="footer-logo" type="button" @click="scrollToSection('top')">
             <div class="logo-icon">
-              <i class="el-icon-first-aid-kit"></i>
+              <img src="../../../商标.png" alt="云岚宗医院" class="logo-img">
             </div>
             <h3>云岚宗医院</h3>
             <p>YUNLANZONG MEDICAL CENTER</p>
@@ -963,6 +963,13 @@ button {
   align-items: center;
   justify-content: center;
   margin-right: 14px;
+  overflow: hidden;
+
+  .logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 
   i {
     color: white;
