@@ -5,7 +5,7 @@
       <div class="header-content">
         <div class="header-left">
           <div class="hospital-logo">
-            <i class="el-icon-first-aid-kit"></i>
+            <img src="../../商标.png" alt="云岚宗医院" class="logo-img">
           </div>
           <div class="hospital-info">
             <h1>云岚宗医院</h1>
@@ -224,6 +224,13 @@
       align-items: center;
       justify-content: center;
       margin-right: 12px;
+      overflow: hidden;
+
+      .logo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
 
       i {
         color: white;
