@@ -366,7 +366,6 @@ const entryStaff = require('../../../../小图标5.png')
 const entryInternational = require('../../../../小图标6.png')
 const hallwayImage = require('@/assets/hospital3.jpg')
 const wardImage = require('@/assets/hospital5.jpg')
-const backgroundImage = require('@/assets/background.jpg')
 
 export default {
   name: 'publicIndex',
@@ -378,7 +377,7 @@ export default {
         tagline: '覆盖常见内科疾病、慢病管理和疑难病会诊。',
         desc: '提供心血管、呼吸、消化、内分泌等综合内科诊疗，支持多学科联合门诊。',
         icon: 'el-icon-first-aid-kit',
-        image: hallwayImage,
+        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         location: '门诊楼 3 层 A 区',
         time: '周一至周六 08:00-17:00',
         phone: '0571-8808-6101',
@@ -394,7 +393,7 @@ export default {
         tagline: '心血管疾病筛查、诊断、介入前评估与长期管理。',
         desc: '面向高血压、冠心病、心律失常、心衰等患者提供连续诊疗服务。',
         icon: 'el-icon-data-analysis',
-        image: wardImage,
+        gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
         location: '门诊楼 4 层 B 区',
         time: '周一至周五 08:00-17:00',
         phone: '0571-8808-6202',
@@ -410,7 +409,7 @@ export default {
         tagline: '呼吸系统疾病、肺部影像异常和重症呼吸支持。',
         desc: '开展慢阻肺、哮喘、肺部感染、肺结节初筛和呼吸康复评估。',
         icon: 'el-icon-odometer',
-        image: backgroundImage,
+        gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
         location: '门诊楼 3 层 C 区',
         time: '周一至周六 08:00-17:00',
         phone: '0571-8808-6303',
@@ -426,7 +425,7 @@ export default {
         tagline: '胃肠肝胆疾病、内镜评估和消化慢病管理。',
         desc: '提供胃炎、肠炎、肝功能异常、消化道出血风险评估和内镜预约指导。',
         icon: 'el-icon-receiving',
-        image: hallwayImage,
+        gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
         location: '门诊楼 4 层 C 区',
         time: '周一至周五 08:00-17:00',
         phone: '0571-8808-6404',
@@ -442,7 +441,7 @@ export default {
         tagline: '肾功能异常、尿检异常和透析前后连续管理。',
         desc: '为肾炎、肾病综合征、慢性肾病患者提供规范化诊疗和随访。',
         icon: 'el-icon-water-cup',
-        image: wardImage,
+        gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
         location: '门诊楼 5 层 A 区',
         time: '周一至周五 08:00-16:30',
         phone: '0571-8808-6505',
@@ -458,7 +457,7 @@ export default {
         tagline: '儿童常见病、成长发育评估和儿童专科随访。',
         desc: '覆盖发热咳嗽、消化问题、儿童保健、过敏与哮喘等儿童健康需求。',
         icon: 'el-icon-s-home',
-        image: backgroundImage,
+        gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
         location: '儿科门诊 2 层',
         time: '周一至周日 08:00-20:00',
         phone: '0571-8808-6606',
@@ -474,7 +473,7 @@ export default {
         tagline: '腹部、甲状腺、乳腺及疝外科诊疗。',
         desc: '提供术前评估、日间手术预约、术后复查及伤口管理。',
         icon: 'el-icon-s-operation',
-        image: hallwayImage,
+        gradient: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
         location: '外科门诊 2 层 A 区',
         time: '周一至周五 08:00-17:00',
         phone: '0571-8808-6707',
@@ -490,7 +489,7 @@ export default {
         tagline: '骨关节损伤、脊柱疾病和运动医学康复。',
         desc: '开展骨折、颈肩腰腿痛、关节退变和运动损伤综合评估。',
         icon: 'el-icon-guide',
-        image: wardImage,
+        gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
         location: '外科门诊 3 层 B 区',
         time: '周一至周六 08:00-17:00',
         phone: '0571-8808-6808',
@@ -506,7 +505,7 @@ export default {
         tagline: '妇科疾病、围产保健和产后康复。',
         desc: '提供妇科常见病诊疗、孕产期管理、盆底康复和计划生育咨询。',
         icon: 'el-icon-s-female',
-        image: backgroundImage,
+        gradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
         location: '妇产中心 2 层',
         time: '周一至周日 08:00-18:00',
         phone: '0571-8808-6909',
@@ -522,7 +521,7 @@ export default {
         tagline: 'CT、DR、MRI、超声检查和影像诊断报告。',
         desc: '支持检查预约、影像调阅、疑难影像会诊和报告在线查询。',
         icon: 'el-icon-picture-outline',
-        image: hallwayImage,
+        gradient: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)',
         location: '医技楼 1 层',
         time: '周一至周日 08:00-22:00',
         phone: '0571-8808-7001',
@@ -538,7 +537,7 @@ export default {
         tagline: '临床检验、样本采集和检验报告解读。',
         desc: '提供血液、尿液、生化、免疫、微生物等检验项目和报告咨询。',
         icon: 'el-icon-files',
-        image: wardImage,
+        gradient: 'linear-gradient(135deg, #fddb92 0%, #d1fdff 100%)',
         location: '医技楼 2 层',
         time: '周一至周日 07:30-17:30',
         phone: '0571-8808-7102',
@@ -554,7 +553,7 @@ export default {
         tagline: '体检套餐、健康评估和慢病风险管理。',
         desc: '面向个人、家庭和企事业单位提供体检、复查提醒和健康档案服务。',
         icon: 'el-icon-medal',
-        image: backgroundImage,
+        gradient: 'linear-gradient(135deg, #96fbc4 0%, #f9f586 100%)',
         location: '健康管理楼 1 层',
         time: '周一至周六 07:30-12:00',
         phone: '0571-8808-7203',
@@ -744,7 +743,7 @@ export default {
     },
     departmentHeroStyle() {
       return {
-        backgroundImage: `linear-gradient(90deg, rgba(0, 70, 50, 0.18), rgba(0, 94, 70, 0.46)), url(${this.selectedDepartment.image})`
+        background: this.selectedDepartment.gradient
       }
     }
   },
@@ -1305,8 +1304,6 @@ button {
   min-height: 360px;
   border-radius: 8px;
   overflow: hidden;
-  background-size: cover;
-  background-position: center;
   box-shadow: 0 18px 38px rgba(8, 83, 61, 0.16);
 }
 

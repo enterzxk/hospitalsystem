@@ -143,6 +143,16 @@ export const patientRouterMap = [
       component: () => import('@/view/patient/patientProfile'),
       meta: {title: '个人信息', icon: 'el-icon-user'}
     }]
+  }, {
+    path: '/patient/departmentIntroduction',
+    component: layout,
+    redirect: '/patient/departmentIntroduction',
+    meta: {title: '科室介绍', icon: 'el-icon-office-building'},
+    children: [{
+      path: '/patient/departmentIntroduction',
+      component: () => import('@/view/patient/departmentIntroduction'),
+      meta: {title: '科室介绍', icon: 'el-icon-office-building'}
+    }]
   },
   {path: '*', redirect: '/404', hidden: true}
 ];

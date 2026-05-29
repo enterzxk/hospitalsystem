@@ -1,58 +1,169 @@
 # hospital-web
 
-> 原项目地址为：https://gitee.com/yyyangyx/appointment-admin
+> 医院管理系统前端 — 基于 Vue 2.5 + Element UI + Webpack 3 的多角色 PC 管理系统
 
-因为原来的开发前端的同学不在维护项目，所以由我基于原来的项目代码，修复bug。
+原项目地址：https://gitee.com/yyyangyx/appointment-admin
 
 ## 介绍
-该项目是基于Vue+webpack+Vuex+elementUI+scss开发设计的一个后台管理系统；该系统觉得分为医生管
-理员和系统管理员；医生管理员能做的事情是查看自己被患者挂号的情况，可以通过日期查看自己出诊时患者
-以往的病历以及在出诊时使用管理系统进行点击当前就诊的是哪位患者，并为患者在小程序端查看就诊队列
-起到决定性作用；系统管理员主要是对医院、专科、医生、排版等进行所需要的管理如增删查改等；
 
-**相关项目**
+本项目是医院管理系统的前端部分，采用 Vue 2 + Webpack 3 + Vuex + Element UI + SCSS 技术栈开发。系统支持**四角色权限隔离**：管理员、主治医生、放射科医生、患者，每个角色拥有独立的路由、菜单和功能模块。
 
-| 项目           | 仓库                                       | 备注                                         |
-| -------------- | ------------------------------------------ | -------------------------------------------- |
-| hospital       | https://github.com/YuJian95/hospital       | 后端代码                                     |
-| Hospital-wxapp | https://github.com/YuJian95/hospital-wxapp | （前端）微信小程序、支付宝小程序、H5应用代码 |
-| Hospital-web   | https://github.com/YuJian95/hospital-web   | （前端）PC管理系统代码     
+### 核心功能
 
-## 软件架构
-该项目是使用Vue+webpack+Vuex进行代码压缩管理等；同时样式使用scss进行编写，前端UI库使用的是
-elementUI进行设计的；同时使用webpack代理表进行跨域处理；所有的表格都是通过调用表格组件进行
-数据处理的，同时api接口也是经过模块化封装调用；
+- **管理员端** — 医院管理、科室管理、医生管理、患者管理、影像管理、诊断管理、排版管理
+- **主治医生端** — 医生工作台、患者预约管理、出诊计划、影像查看、诊断报告撰写
+- **放射科医生端** — 放射科工作台、DICOM 影像查看器、Canvas 标注工具（框选/画笔/擦除）、AI 辅助分割
+- **患者端** — 预约挂号（多步骤向导）、我的预约、就诊记录、报告查询、缴费记录、科室介绍、个人信息
 
-## 安装教程
-1. 首先在当前页面使用克隆将前端代码克隆到编译器中，并使用run install进行安装依赖；
-2. 使用npm run build 便能会在dist文件夹中查看到压缩后的文件；
-3. 到https://github.com/YuJian95/hospital克隆后端代码并在依赖安装完毕后运行；
-4. 接着运行前端代码npm run dev；
-5. 目前只有账号admin 密码admin；
+## 技术栈
 
-### npm install 报错，Error: Can't find Python executable "python", you can set the PYTHON env variable.
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| Node.js | **16.20.2** | 运行环境（**必须是 16.x**，不兼容 18/20/24） |
+| Vue.js | 2.5 | 前端框架 |
+| Element UI | 2.13+ | UI 组件库 |
+| Vue Router | 3.x | 路由管理（4 套角色路由） |
+| Vuex | 3.x | 状态管理 |
+| Axios | 0.19 | HTTP 客户端 |
+| Webpack | 3.6 | 模块打包工具 |
+| SCSS (Sass) | 1.32 | CSS 预处理器 |
+| Cornerstone.js | 2.6 | DICOM 医学影像渲染引擎 |
+| DICOM Parser | 1.8 | DICOM 文件解析库 |
+| Three.js | 0.184 | 3D 渲染（影像查看器） |
+| js-cookie | 2.2 | Cookie 管理 |
+| js-sha256 | 0.9 | 密码加密（前端 SHA256 哈希） |
+| NProgress | 0.2 | 页面加载进度条 |
 
-**解决方案：**
+## 架构说明
 
-```npm
+### 四套路由体系
+
+```
+permission.js 根据用户名前缀动态注入路由：
+  admin         → systemRouterMap      （管理员）
+  doctor*       → doctorRouterMap      （主治医生）
+  radiologist*  → radiologistRouterMap  （放射科医生）
+  patient*      → patientRouterMap     （患者）
+```
+
+### 项目结构
+
+```
+hospital-web/
+├── src/
+│   ├── api/                    # API 接口封装
+│   │   ├── login.js            # 登录认证
+│   │   ├── doctor.js           # 医生管理
+│   │   ├── appointment.js      # 预约挂号
+│   │   ├── imaging.js          # 影像管理
+│   │   ├── diagnosis.js        # 诊断报告
+│   │   └── annotation.js       # 标注管理
+│   ├── view/                   # 页面组件
+│   │   ├── login/              # 登录页
+│   │   ├── home/               # 首页仪表板
+│   │   ├── hospitalManagement/ # 医院管理
+│   │   ├── departmentManagement/ # 科室管理
+│   │   ├── doctorManagement/   # 医生管理
+│   │   ├── patientManagement/  # 患者管理
+│   │   ├── imagingManagement/  # 影像管理
+│   │   │   ├── imagingList.vue       # 影像列表
+│   │   │   ├── imagingViewer.vue     # 影像查看器（Canvas）
+│   │   │   ├── imagingUpload.vue     # 影像上传
+│   │   │   └── radiologistDashboard.vue # 放射科工作台
+│   │   ├── diagnosisManagement/ # 诊断管理
+│   │   ├── patient/            # 患者端页面
+│   │   │   ├── appointmentCreate.vue  # 预约挂号向导
+│   │   │   ├── appointmentList.vue    # 我的预约
+│   │   │   ├── visitRecords.vue       # 就诊记录
+│   │   │   ├── reportQuery.vue        # 报告查询
+│   │   │   ├── paymentRecords.vue     # 缴费记录
+│   │   │   ├── departmentIntroduction.vue # 科室介绍
+│   │   │   └── patientProfile.vue     # 个人信息
+│   │   ├── public/             # 公共页面（大厅）
+│   │   └── 404/                # 404 页面
+│   ├── layout/                 # 布局组件
+│   │   └── layout.vue          # 主布局（顶栏 + 侧边栏 + 内容区）
+│   ├── router/index.js         # 路由配置（4 套路由）
+│   ├── permission.js           # 权限控制（角色路由分发）
+│   ├── store/                  # Vuex 状态管理
+│   ├── utils/                  # 工具函数
+│   └── assets/                 # 静态资源
+├── package.json
+└── webpack.config.js
+```
+
+### 前端关键特性
+
+- **SCSS 主题系统** — 统一的 `$primary-color: #075f42` 医疗绿色主题
+- **DICOM 影像查看器** — Cornerstone.js 渲染，支持多系列/切片切换、Canvas 遮罩层标注
+- **人工标注工具** — 框选（矩形）、画笔（自由绘制）、擦除、撤销/重做
+- **Webpack 代理** — 开发环境 API 请求代理至 `localhost:8080/hospital`
+- **响应式侧边栏** — 支持折叠/展开，根据角色动态生成菜单
+
+## 安装与运行
+
+```bash
+# 克隆项目
+git clone https://github.com/enterzxk/hospitalsystem.git
+cd hospitalsystem/hospital-web
+
+# ⚠️ 必须使用 Node.js 16.x
+nvm use 16.20.2
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+
+# 生产构建
+npm run build
+```
+
+启动后访问：http://localhost:8082
+
+## 测试账号
+
+| 账号 | 密码 | 角色 |
+|------|------|------|
+| `admin` | `123456` | 管理员 |
+| `doctor1` | `123456` | 主治医生 |
+| `radiologist1` | `123456` | 放射科医生 |
+| `patient1` | `123456` | 患者 |
+
+## 常见问题
+
+### npm install 报错 `Can't find Python executable "python"`
+
+```bash
 npm config set sass_binary_site https://npm.taobao.org/mirrors/node-sass/
 npm install node-sass
 ```
 
-## 使用说明
-1. 首先每个账号及密码都是系统管理员赋予的，不能自行进行创建；
-2. 医生管理员通过输入自己的指定账号和初始化密码进行，只能看到自己的患者和出诊情况，同时可以
-进行密码的修改；
-3. 医生管理员在出诊当天能对患者进行就诊处理，平时可以查看患者的以往就诊情况，查看过往病历等；
-4. 系统管理员能对医院、专科门诊、医生等进行管理，系统管理员的权限最大，根据系统管理员设置的
-医院、专科门诊、医生之间的关系环环相扣，之间相互依赖，同时系统管理员还要进行排版等；
+### 启动报错 `Node.js version incompatible`
 
-## 反馈
+项目要求 Node.js 16.x，使用 nvm-windows 切换：
 
-如有问题欢迎提交 Issue ，遇到问题可以通过我的网站[【blog.yujian95.cn】](https://blog.yujian95.cn)联系我。
+```bash
+nvm use 16.20.2
+node -v  # 应显示 v16.20.2
+```
 
-**收费** ！！！ 技术咨询服务或微信小程序、Web项目开发、官网定制等需求，可加微信：**mo0052**（Mores），备注 项目开发 或 咨询服务。
+## 相关项目
 
-欢迎大家关注我的公众号【编程图解】，学习更多开发技能，包括并不限于，Java、Python、前端等知识。
+| 项目 | 仓库 | 说明 |
+|------|------|------|
+| hospital | https://github.com/enterzxk/hospitalsystem | 后端 Spring Boot 项目 |
+| hospital-web | 本仓库 | 前端 Vue 管理系统 |
+| medsam-service | 本仓库 medsam-service/ | AI 分割服务（Python Flask） |
 
-![微信搜索【编程图解】](http://image.yujian95.cn/halo/yujian95.jpg)
+## Contributors
+
+| 贡献者 | GitHub | 贡献内容 |
+|--------|--------|---------|
+| **enterzxk** | [@enterzxk](https://github.com/enterzxk) | 项目维护者 — 前端重构、角色权限系统、患者功能、影像标注、AI 集成 |
+| **YuJian95** | [@YuJian95](https://github.com/YuJian95) | 原项目作者 — 后端架构、数据库设计、基础功能 |
+
+## License
+
+MIT License

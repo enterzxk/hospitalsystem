@@ -37,7 +37,7 @@
 | **管理员** | 系统管理 | 医院管理、科室管理、医生管理、患者管理、影像管理、诊断管理、排版管理 |
 | **主治医生** | 临床诊断 | 患者预约管理、出诊计划、影像查看、诊断报告撰写 |
 | **放射科医生** | 影像诊断 | 放射科工作台、影像查看器、人工标注（框选/画笔/擦除）、AI 辅助分割、诊断报告 |
-| **患者** | 就医服务 | 预约挂号、查看预约、就诊记录、个人信息 |
+| **患者** | 就医服务 | 预约挂号、查看预约、就诊记录、报告查询、缴费记录、科室介绍、个人信息 |
 
 ### 核心功能模块
 
@@ -108,12 +108,28 @@
 
 | 技术 | 版本 | 说明 |
 |------|------|------|
-| Node.js | 16.x | 运行环境 |
+| Node.js | 16.20.2 | 运行环境（**必须是 16.x**） |
 | Vue.js | 2.5 | 前端框架 |
-| Element UI | — | UI 组件库 |
-| Vue Router | 3.x | 路由管理 |
+| Element UI | 2.13+ | UI 组件库（表格、表单、弹窗、标签等） |
+| Vue Router | 3.x | 路由管理（4 套角色路由） |
 | Vuex | 3.x | 状态管理 |
-| Axios | — | HTTP 客户端 |
+| Axios | 0.19 | HTTP 客户端 |
+| Webpack | 3.6 | 模块打包工具 |
+| SCSS (Sass) | 1.32 | CSS 预处理器 |
+| Cornerstone.js | 2.6 | DICOM 医学影像渲染引擎 |
+| DICOM Parser | 1.8 | DICOM 文件解析库 |
+| Three.js | 0.184 | 3D 渲染（影像查看器） |
+| js-cookie | 2.2 | Cookie 管理 |
+| js-sha256 | 0.9 | 密码加密（前端 SHA256 哈希） |
+| NProgress | 0.2 | 页面加载进度条 |
+
+#### 前端架构说明
+
+- **四套路由体系**：`systemRouterMap`（管理员）、`doctorRouterMap`（医生）、`radiologistRouterMap`（放射科）、`patientRouterMap`（患者），通过 `permission.js` 根据用户名前缀动态注入
+- **DICOM 影像查看器**：基于 Cornerstone.js 实现，支持多系列/切片切换、Canvas 渲染、遮罩层标注叠加
+- **人工标注工具**：框选（矩形）、画笔（自由绘制）、擦除、撤销/重做，标注数据通过 REST API 持久化
+- **SCSS 主题系统**：统一的 `$primary-color: #075f42` 医疗绿色主题，所有页面共享配色变量
+- **Webpack 代理**：开发环境通过 `webpack-dev-server` 代理表解决跨域，API 请求转发至后端 `localhost:8080/hospital`
 
 ### AI 服务
 
@@ -306,6 +322,9 @@ hospitalsystem/
 │   │   │   │   ├── appointmentCreate.vue  # 预约挂号向导
 │   │   │   │   ├── appointmentList.vue    # 我的预约
 │   │   │   │   ├── visitRecords.vue       # 就诊记录
+│   │   │   │   ├── reportQuery.vue        # 报告查询
+│   │   │   │   ├── paymentRecords.vue     # 缴费记录
+│   │   │   │   ├── departmentIntroduction.vue # 科室介绍
 │   │   │   │   └── patientProfile.vue     # 个人信息
 │   │   │   ├── userPermission/            # 权限管理
 │   │   │   └── public/                    # 公共页面
@@ -528,6 +547,9 @@ hospitalsystem/
 | 预约挂号 | 多步骤向导：选科室→选医生→选时间→确认 |
 | 我的预约 | 查看预约列表、取消预约 |
 | 就诊记录 | 历史就诊记录、诊断信息、处方 |
+| 报告查询 | 诊断报告和检查结果查看，支持按类型筛选 |
+| 缴费记录 | 挂号费、检查费等缴费明细，支持状态和日期筛选 |
+| 科室介绍 | 12 个科室详情、特色诊疗、推荐医生 |
 | 个人信息 | 姓名、性别、联系方式、就诊卡号 |
 
 ---
@@ -659,3 +681,27 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+## Contributors
+
+感谢以下贡献者对本项目的贡献：
+
+| 贡献者 | GitHub | 贡献内容 |
+|--------|--------|---------|
+| **enterzxk** | [@enterzxk](https://github.com/enterzxk) | 项目维护者 — 前端重构、角色权限系统、患者功能、影像标注、AI 集成 |
+| **YuJian95** | [@YuJian95](https://github.com/YuJian95) | 原项目作者 — 后端 Spring Boot 架构、数据库设计、基础功能 |
+
+---
+
+## 致谢
+
+本项目基于以下开源项目二次开发：
+
+- [base-service 轻量级脚手架](https://github.com/YuJian95/base-service) — 后端基础架构
+- [hospital](https://github.com/YuJian95/hospital) — 原始后端代码
+- [hospital-web](https://github.com/YuJian95/hospital-web) — 原始前端代码
+- [MedSAM (Segment Anything)](https://github.com/bowang-lab/MedSAM) — 医学图像分割模型
+- [Cornerstone.js](https://cornerstonejs.org/) — DICOM 影像渲染引擎
+- [Element UI](https://element.eleme.cn/) — Vue 2.0 UI 组件库

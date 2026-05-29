@@ -21,6 +21,9 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
+          <el-button class="back-lobby-btn" @click="goToLobby">
+            <i class="el-icon-s-home"></i> 返回大厅
+          </el-button>
           <el-dropdown trigger="hover" @command="handleCommand">
             <span class="user-dropdown">
               <i class="el-icon-user"></i>
@@ -122,6 +125,9 @@
             this.logoutFun();
             break;
         }
+      },
+      goToLobby() {
+        this.$router.push('/');
       },
       logoutFun() {
         this.$confirm('确认退出吗？', '提示', {
@@ -260,6 +266,29 @@
   }
 
   .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .back-lobby-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 8px 16px;
+      font-size: 13px;
+      border-radius: 6px;
+      transition: all 0.3s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+
+      i {
+        margin-right: 4px;
+      }
+    }
+
     .user-dropdown {
       display: flex;
       align-items: center;

@@ -248,7 +248,8 @@ export default {
         { title: '就诊记录', desc: '查看历史就诊信息和诊断结果', bg: 'linear-gradient(135deg, #2980b9, #3498db)', route: '/patient/visitRecords', icon: 'el-icon-document' },
         { title: '报告查询', desc: '查看诊断报告和检查结果', bg: 'linear-gradient(135deg, #e67e22, #f39c12)', route: '/patient/reportQuery', icon: 'el-icon-s-check' },
         { title: '缴费记录', desc: '查看挂号费、检查费等缴费明细', bg: 'linear-gradient(135deg, #e74c3c, #c0392b)', route: '/patient/paymentRecords', icon: 'el-icon-wallet' },
-        { title: '个人信息', desc: '查看和管理您的个人资料', bg: 'linear-gradient(135deg, #8e6bb0, #a57fd4)', route: '/patient/profile', icon: 'el-icon-user' }
+        { title: '个人信息', desc: '查看和管理您的个人资料', bg: 'linear-gradient(135deg, #8e6bb0, #a57fd4)', route: '/patient/profile', icon: 'el-icon-user' },
+        { title: '科室介绍', desc: '了解医院各科室特色诊疗和专家团队', bg: 'linear-gradient(135deg, #1abc9c, #16a085)', route: '/patient/departmentIntroduction', icon: 'el-icon-office-building' }
       ]
     }
   },

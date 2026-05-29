@@ -46,6 +46,13 @@
 
 点击查看[/doc/deploy.md](doc/deploy.md)
 
+## Contributors
+
+| 贡献者 | GitHub | 贡献内容 |
+|--------|--------|---------|
+| **enterzxk** | [@enterzxk](https://github.com/enterzxk) | 前端重构、角色权限系统、患者功能、影像标注、AI 集成 |
+| **YuJian95** | [@YuJian95](https://github.com/YuJian95) | 原项目作者 — 后端架构、数据库设计、基础功能 |
+
 ## 反馈
 
 如有问题欢迎提交 Issue ，遇到问题可以通过我的网站[【blog.yujian95.cn】](https://blog.yujian95.cn)联系我。
