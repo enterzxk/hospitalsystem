@@ -19,9 +19,9 @@
     <div class="department-grid">
       <div class="dept-card" v-for="dept in filteredList" :key="dept.name" @click="viewDetail(dept)">
         <div class="dept-visual" :style="{ background: dept.gradient }">
-          <div class="dept-icon">
-            <img v-if="dept.image" :src="dept.image" :alt="dept.name" class="dept-img">
-            <i v-else :class="dept.icon"></i>
+          <img v-if="dept.image" :src="dept.image" :alt="dept.name" class="dept-img-full">
+          <div v-else class="dept-icon">
+            <i :class="dept.icon"></i>
           </div>
           <div class="dept-badge">{{ dept.category }}</div>
         </div>
@@ -45,9 +45,11 @@
     <el-dialog :title="currentDept.name + ' 详情'" :visible.sync="detailVisible" width="700px">
       <div v-if="currentDept" class="detail-content">
         <div class="detail-header" :style="{ background: currentDept.gradient }">
-          <div class="detail-icon">
-            <img v-if="currentDept.image" :src="currentDept.image" :alt="currentDept.name" class="detail-img">
-            <i v-else :class="currentDept.icon"></i>
+          <div class="detail-icon" v-if="!currentDept.image">
+            <i :class="currentDept.icon"></i>
+          </div>
+          <div class="detail-img-wrap" v-else>
+            <img :src="currentDept.image" :alt="currentDept.name" class="detail-img">
           </div>
           <div class="detail-info">
             <span class="detail-category">{{ currentDept.category }}</span>
@@ -411,11 +413,18 @@ $primary-light: #20a978;
 }
 
 .dept-visual {
-  height: 120px;
+  height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  overflow: hidden;
+
+  .dept-img-full {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
   .dept-icon {
     width: 70px;
@@ -426,13 +435,6 @@ $primary-light: #20a978;
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(8px);
-    overflow: hidden;
-
-    .dept-img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
 
     i {
       font-size: 32px;
@@ -497,25 +499,32 @@ $primary-light: #20a978;
     display: flex;
     align-items: center;
     gap: 20px;
-    padding: 24px;
+    padding: 0;
     border-radius: 8px;
     margin-bottom: 20px;
+    overflow: hidden;
+    min-height: 160px;
+
+    .detail-img-wrap {
+      width: 100%;
+      height: 160px;
+
+      .detail-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
 
     .detail-icon {
       width: 80px;
       height: 80px;
+      margin: 24px;
       background: rgba(255, 255, 255, 0.2);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
-
-      .detail-img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-      }
 
       i {
         font-size: 40px;
