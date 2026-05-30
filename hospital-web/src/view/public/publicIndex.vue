@@ -156,13 +156,17 @@
             type="button"
             @click="openDepartmentDetail(dept)"
           >
-            <div class="dept-icon">
-              <img v-if="dept.image" :src="dept.image" :alt="dept.name" class="dept-img">
-              <i v-else :class="dept.icon"></i>
+            <div class="dept-card-img">
+              <img v-if="dept.image" :src="dept.image" :alt="dept.name">
+              <div v-else class="dept-card-icon">
+                <i :class="dept.icon"></i>
+              </div>
             </div>
-            <h3>{{ dept.name }}</h3>
-            <p>{{ dept.desc }}</p>
-            <span class="detail-btn">查看详情 <i class="el-icon-arrow-right"></i></span>
+            <div class="dept-card-body">
+              <h3>{{ dept.name }}</h3>
+              <p>{{ dept.desc }}</p>
+              <span class="detail-btn">查看详情 <i class="el-icon-arrow-right"></i></span>
+            </div>
           </button>
         </div>
       </div>
@@ -1508,61 +1512,63 @@ button {
 
 .department-card {
   background: #f8fbfa;
-  padding: 34px 26px;
   border-radius: 8px;
   border: 1px solid rgba(0, 122, 77, 0.10);
-  text-align: center;
+  overflow: hidden;
   transition: all 0.2s;
   cursor: pointer;
 
   &:hover {
-    background: linear-gradient(135deg, #007a4d, #20a978);
     transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 122, 77, 0.15);
+  }
 
-    .dept-icon i,
-    h3,
-    p,
+  .dept-card-img {
+    height: 140px;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .dept-card-icon {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+
+      i {
+        font-size: 44px;
+        color: #007a4d;
+      }
+    }
+  }
+
+  .dept-card-body {
+    padding: 18px 20px;
+    text-align: center;
+
+    h3 {
+      font-size: 18px;
+      color: #26342f;
+      margin: 0 0 8px;
+    }
+
+    p {
+      min-height: 40px;
+      font-size: 13px;
+      color: #60726b;
+      margin: 0 0 12px;
+      line-height: 1.5;
+    }
+
     .detail-btn {
-      color: white;
-    }
-  }
-
-  .dept-icon {
-    margin-bottom: 18px;
-
-    .dept-img {
-      width: 60px;
-      height: 60px;
-      object-fit: contain;
-    }
-
-    i {
-      font-size: 44px;
       color: #007a4d;
-      transition: color 0.2s;
+      font-size: 13px;
     }
-  }
-
-  h3 {
-    font-size: 20px;
-    color: #26342f;
-    margin: 0 0 10px;
-    transition: color 0.2s;
-  }
-
-  p {
-    min-height: 44px;
-    font-size: 14px;
-    color: #60726b;
-    margin: 0 0 18px;
-    line-height: 1.6;
-    transition: color 0.2s;
-  }
-
-  .detail-btn {
-    color: #007a4d;
-    font-size: 14px;
-    transition: color 0.2s;
   }
 }
 
