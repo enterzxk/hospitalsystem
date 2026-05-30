@@ -54,6 +54,7 @@ Redis-x64-3.0.504.zip
 # Images (keep only essential ones)
 *.png
 !hospital-web/src/assets/*.png
+!hospital-web/src/assets/科室图片/*.png
 !hospital/src/main/resources/static/*.png
 !前端展示/*.png
 
@@ -63,6 +64,5 @@ Redis-x64-3.0.504.zip
 挂号界面图标照片/
 核心功能.png
 用户附件.png
-商标.png
 小图标*.png
 医院背景图.png

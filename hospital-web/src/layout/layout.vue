@@ -5,7 +5,7 @@
       <div class="header-content">
         <div class="header-left">
           <div class="hospital-logo">
-            <img src="../../../商标.png" alt="云岚宗医院" class="logo-img">
+            <img :src="logoImg" alt="云岚宗医院" class="logo-img">
           </div>
           <div class="hospital-info">
             <h1>云岚宗医院</h1>
@@ -99,6 +99,7 @@
 <script>
   import Cookie from 'js-cookie';
   import {getCookie} from "@/utils/cookies";
+  const logoImg = require('@/assets/商标.png');
 
   export default {
     name: "layout",
@@ -106,7 +107,8 @@
       return {
         sysUserName: '',
         isCollapsed: false,
-        menuRoutes: []
+        menuRoutes: [],
+        logoImg
       }
     },
     methods: {

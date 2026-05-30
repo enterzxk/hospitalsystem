@@ -72,7 +72,31 @@
       "Bash(mvn spring-boot:run -q)",
       "Bash(xargs -I {} curl -s \"http://localhost:8080/hospital/power/account/login?name=radiologist1&password={}\")",
       "Bash(taskkill //F //IM java.exe)",
-      "Bash(gh auth *)"
+      "Bash(gh auth *)",
+      "Bash(git push *)",
+      "Bash(git rm *)",
+      "Bash(git commit *)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('医院数量:', d['data']['total']\\)\")",
+      "Bash(mysql -u root -ppassword -e \"SHOW DATABASES;\")",
+      "Bash(mysql -u root -e \"SHOW DATABASES;\")",
+      "Bash(unzip -q -o node-v16.20.2-win-x64.zip -d \"C:/Users/京康/Desktop/\")",
+      "Bash(C:/Users/京康/Desktop/node-v16.20.2-win-x64/node-v16.20.2-win-x64/node.exe *)",
+      "Bash(C:/Users/京康/Desktop/node-v16.20.2-win-x64/node.exe *)",
+      "Bash(\"C:/Users/京康/Desktop/node-v16.20.2-win-x64/node.exe\" node_modules/webpack/bin/webpack.js --version)",
+      "Bash(\"C:/Users/京康/Desktop/node-v16.20.2-win-x64/npx.cmd\" --version)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('科室数量:', d['data']['total']\\)\")",
+      "Bash(\"C:/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe\" -u root -p\"password\" -e \"SHOW DATABASES;\")",
+      "Bash(\"C:/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe\" -u root -e \"SHOW DATABASES;\")",
+      "Bash(\"C:/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe\" -u root -p123456 hospital -e \"SELECT id, name FROM power_account;\")",
+      "Bash(\"C:/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe\" -u root -p123456 hospital -e \"SELECT id, name FROM power_role;\")",
+      "Bash(git add *)",
+      "Bash(git revert *)",
+      "Bash(echo -n 'data:image/png;base64,')",
+      "Bash(base64 -w 0 \"C:/Users/京康/Desktop/医院管理系统/商标.png\")",
+      "Read(//tmp/**)",
+      "Bash(echo -n \"data:image/png;base64,\")",
+      "Bash(gh repo *)",
+      "Bash(git check-ignore *)"
     ]
   }
 }

@@ -4,7 +4,7 @@
       <div class="header-container">
         <button class="logo" type="button" @click="scrollToSection('top')">
           <div class="logo-icon">
-            <img src="../../../../商标.png" alt="云岚宗医院" class="logo-img">
+            <img :src="logoImg" alt="云岚宗医院" class="logo-img">
           </div>
           <div class="logo-text">
             <h1>云岚宗医院</h1>
@@ -281,7 +281,7 @@
         <div class="footer-main">
           <button class="footer-logo" type="button" @click="scrollToSection('top')">
             <div class="logo-icon">
-              <img src="../../../../商标.png" alt="云岚宗医院" class="logo-img">
+              <img :src="logoImg" alt="云岚宗医院" class="logo-img">
             </div>
             <h3>云岚宗医院</h3>
             <p>YUNLANZONG MEDICAL CENTER</p>
@@ -372,20 +372,21 @@ const entryStaff = require('../../../../小图标5.png')
 const entryInternational = require('../../../../小图标6.png')
 const hallwayImage = require('@/assets/hospital3.jpg')
 const wardImage = require('@/assets/hospital5.jpg')
+const logoImg = require('@/assets/商标.png')
 
 // 科室图片
-const deptNeike = require('../../../../科室图片/内科学系.png')
-const deptXinneike = require('../../../../科室图片/心内科.png')
-const deptHuxike = require('../../../../科室图片/呼吸与危重症医学科.png')
-const deptXiaohuake = require('../../../../科室图片/消化内科.png')
-const deptShenzangke = require('../../../../科室图片/肾脏科.png')
-const deptErke = require('../../../../科室图片/儿科.png')
-const deptWaike = require('../../../../科室图片/普通外科.png')
-const deptGuKe = require('../../../../科室图片/骨科.png')
-const deptFuchanke = require('../../../../科室图片/妇产科.png')
-const deptYingxiang = require('../../../../科室图片/医学影像科.png')
-const deptJianyanke = require('../../../../科室图片/检验科.png')
-const deptJiankang = require('../../../../科室图片/健康管理中心.png')
+const deptNeike = require('@/assets/科室图片/内科学系.png')
+const deptXinneike = require('@/assets/科室图片/心内科.png')
+const deptHuxike = require('@/assets/科室图片/呼吸与危重症医学科.png')
+const deptXiaohuake = require('@/assets/科室图片/消化内科.png')
+const deptShenzangke = require('@/assets/科室图片/肾脏科.png')
+const deptErke = require('@/assets/科室图片/儿科.png')
+const deptWaike = require('@/assets/科室图片/普通外科.png')
+const deptGuKe = require('@/assets/科室图片/骨科.png')
+const deptFuchanke = require('@/assets/科室图片/妇产科.png')
+const deptYingxiang = require('@/assets/科室图片/医学影像科.png')
+const deptJianyanke = require('@/assets/科室图片/检验科.png')
+const deptJiankang = require('@/assets/科室图片/健康管理中心.png')
 
 export default {
   name: 'publicIndex',
@@ -760,7 +761,8 @@ export default {
           desc: '',
           details: []
         }
-      }
+      },
+      logoImg
     }
   },
   computed: {
