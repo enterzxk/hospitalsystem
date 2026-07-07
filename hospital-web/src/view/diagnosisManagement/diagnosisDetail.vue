@@ -20,8 +20,8 @@
         <el-descriptions-item label="检查类型">{{ diagnosisData.examinationType }}</el-descriptions-item>
         <el-descriptions-item label="检查部位">{{ diagnosisData.bodyPart }}</el-descriptions-item>
         <el-descriptions-item label="状态" :span="2">
-          <el-tag :type="diagnosisData.reportStatus === 'submitted' ? 'success' : 'info'">
-            {{ diagnosisData.reportStatus === 'submitted' ? '已上传' : '草稿' }}
+          <el-tag :type="getStatusTag(diagnosisData.reportStatus)">
+            {{ getStatusText(diagnosisData.reportStatus) }}
           </el-tag>
         </el-descriptions-item>
       </el-descriptions>
@@ -129,6 +129,14 @@ export default {
     },
     handlePrint() {
       window.print();
+    },
+    getStatusText(status) {
+      const map = { pending_attending: '待主治医生诊断', draft: '草稿', submitted: '已上传' };
+      return map[status] || '草稿';
+    },
+    getStatusTag(status) {
+      const map = { pending_attending: 'warning', draft: 'info', submitted: 'success' };
+      return map[status] || 'info';
     },
     getArchiveTitle(result) {
       if (!result) return '影像标注归档';

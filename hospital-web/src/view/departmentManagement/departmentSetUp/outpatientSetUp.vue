@@ -72,6 +72,7 @@
   } from "@/api/outpatient";
   import {tips} from "@/common/js/optionTips";
   import {getDoctorDepartmentList} from "@/api/departmentSetUp";
+  import {getHospitalInfo} from "@/api/hospital";
 
   export default {
         name: "outpatientSetUp",
@@ -136,19 +137,50 @@
             this.deleteDialog.id = option.scopeRow.ID; // 发送删除id
           }
         },
+        // 直接刷新当前页面时，sessionStorage 可能已经不存在，需要重新获取医院列表
+        getAllHospital: function() {
+          this.hospitalData = [];
+          this.tableAllData.tableData = [];
+          this.tableAllData.dataNull = false;
+          getHospitalInfo(1, 50, '').then(res => {
+            if (res.code === 200) {
+              const data = res.data.list || [];
+              if (data.length > 0) {
+                this.hospitalData = data;
+                if (!data.some(item => String(item.id) === String(this.selectHospitalID))) {
+                  this.selectHospitalID = data[0].id;
+                }
+                this.getHospitalDepartmentList();
+              } else {
+                this.tableAllData.dataNull = true;
+              }
+            }
+          }).catch(() => {
+            this.tableAllData.dataNull = true;
+            tips('error', '获取医院信息失败');
+          })
+        },
         // 获取医院的专科列表
         getHospitalDepartmentList: function() {
           this.departmentSelectData = [];
+          this.tableAllData.tableData = [];
+          this.tableAllData.dataNull = false;
           getDoctorDepartmentList(this.selectHospitalID, 1, 50)
             .then(res => {
               if (res.code === 200) {
-                if (res.data.list !== null) {
-                  this.departmentSelectData = res.data.list;
-                  // this.selectDepartmentID = res.data.list[0].id;
+                const data = res.data.list || [];
+                if (data.length > 0) {
+                  this.departmentSelectData = data;
+                  if (!data.some(item => String(item.id) === String(this.selectDepartmentID))) {
+                    this.selectDepartmentID = data[0].id;
+                  }
                   this.getOutpatientByHospital()
+                } else {
+                  this.tableAllData.dataNull = true;
                 }
               }
             }).catch(() => {
+            this.tableAllData.dataNull = true;
             tips('error', '获取专科列表失败')
           })
         },
@@ -171,11 +203,12 @@
         // 获取医院的门诊列表
         getOutpatientByHospital: function() {
           this.tableAllData.tableData = [];
+          this.tableAllData.dataNull = false;
           let _this = this;
           getOutpatientByHospital(this.selectHospitalID, this.selectDepartmentID,
           this.pageList.pageNum, this.pageList.pageSize).then(res => {
             if (res.code === 200) {
-              const data = res.data.list;
+              const data = res.data.list || [];
               if (data === null || data.length === 0) {
                 this.tableAllData.dataNull = true;
               } else {
@@ -189,6 +222,7 @@
               this.getOutpatientListById()
             }
           }).catch(() => {
+            this.tableAllData.dataNull = true;
             tips('error', '获取列表信息失败')
           })
         },
@@ -262,15 +296,18 @@
         fatherMethod: function (pageNum, pageSize) {
           this.pageList.pageNum = pageNum;
           this.pageList.pageSize = pageSize;
-          this.getOutpatientListById(this.selectID)
+          this.getOutpatientByHospital()
         }
       },
       mounted() {
-        this.hospitalData = JSON.parse(sessionStorage.getItem('hospitalList'));
+        this.hospitalData = JSON.parse(sessionStorage.getItem('hospitalList') || '[]');
         this.selectHospitalID = this.$route.query.hospitalID;
         this.selectDepartmentID = this.$route.query.departmentID;
+        if (this.hospitalData.length === 0) {
+          this.getAllHospital();
+          return;
+        }
         this.getHospitalDepartmentList();
-        this.compareOutpatient();
         sessionStorage.removeItem('hospitalList')
       }
     }

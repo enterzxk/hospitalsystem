@@ -161,7 +161,7 @@
               @mouseup="handlePointerUp($event, view.key)"
               @mouseleave="handlePointerUp($event, view.key)"
               @wheel.prevent="handleWheel">
-              <canvas :ref="'imageCanvas_' + view.key" :width="canvasWidth" :height="canvasHeight"></canvas>
+              <canvas :ref="'imageCanvas_' + view.key" :width="canvasWidth" :height="canvasHeight" class="image-layer"></canvas>
               <canvas :ref="'maskCanvas_' + view.key" :width="canvasWidth" :height="canvasHeight" class="mask-layer"></canvas>
               <div class="crosshair horizontal"></div>
               <div class="crosshair vertical"></div>
@@ -171,10 +171,57 @@
       </main>
 
       <aside class="right-dock">
+        <ai-result-panel
+          :case-info="imagingData"
+          :manual-annotation-count="manualAnnotationCount"
+          :detection-results="detectionResults"
+          :segmentation-results="segmentationResults"
+          :classification-results="classificationResults"
+          :selected-candidate-id="selectedCandidateId"
+          :running-task="runningAiTask"
+          @run-detection="runDetection"
+          @apply-box="applyCandidateBox"
+          @run-segmentation="runSegmentation"
+          @run-classification="runClassification"
+          @confirm-result="confirmAiResultItem"
+          @create-draft="createStructuredDraft">
+        </ai-result-panel>
+
         <section class="dock-panel annotation-panel">
           <div class="panel-heading">
             <span>人工标注</span>
             <small>{{ currentToolName }}</small>
+          </div>
+          <div class="manual-toolbar">
+            <button type="button" :class="{ active: tool === 'box' }" @click="setTool('box')">
+              <i class="el-icon-crop"></i>
+              <span>框选</span>
+            </button>
+            <button type="button" :class="{ active: tool === 'point' }" @click="setTool('point')">
+              <i class="el-icon-location-outline"></i>
+              <span>点选</span>
+            </button>
+            <button type="button" :class="{ active: tool === 'polygon' }" @click="setTool('polygon')">
+              <i class="el-icon-share"></i>
+              <span>轮廓</span>
+            </button>
+            <button type="button" :class="{ active: tool === 'brush' }" @click="setTool('brush')">
+              <i class="el-icon-edit"></i>
+              <span>补画</span>
+            </button>
+            <button type="button" :class="{ active: tool === 'erase' }" @click="setTool('erase')">
+              <i class="el-icon-delete"></i>
+              <span>擦除</span>
+            </button>
+            <button type="button" :class="{ active: tool === 'ruler' }" @click="setTool('ruler')">
+              <i class="el-icon-minus"></i>
+              <span>测量</span>
+            </button>
+          </div>
+          <div class="manual-state">
+            <span :class="{ active: isDrawing }">{{ isDrawing ? '绘制中' : '就绪' }}</span>
+            <strong>{{ getToolText(tool) }}</strong>
+            <small>{{ activeViewName }} / Slice {{ currentSlice }}</small>
           </div>
           <div class="active-label">
             <i :style="{ backgroundColor: currentLabel.color }"></i>
@@ -193,18 +240,20 @@
             <el-slider v-model="maskOpacity" :min="15" :max="85" :show-tooltip="false" @input="drawScene"></el-slider>
             <b>{{ maskOpacity }}%</b>
           </div>
-        </section>
-
-        <section class="dock-panel">
-          <div class="panel-heading">
-            <span>模型接口</span>
-            <small>预留</small>
+          <div class="layer-switches">
+            <el-checkbox v-model="showManualLayer" @change="drawScene">人工层</el-checkbox>
+            <el-checkbox v-model="showAiOverlay" @change="drawScene">AI层</el-checkbox>
+            <el-checkbox v-model="showReferenceMask" @change="drawScene">参考Mask</el-checkbox>
           </div>
-          <div class="model-placeholder">
-            <i class="el-icon-cpu"></i>
-            <strong>MedSAM 待接入</strong>
-            <p>当前版本先完成人工标注、归档和报告闭环。后续接入模型时，使用数据文件作为模型输入，使用标注文件作为参考 mask 或监督标签。</p>
-            <el-button size="mini" disabled>模型分割待接入</el-button>
+          <div class="manual-stats">
+            <div>
+              <span>本层标注</span>
+              <strong>{{ currentSliceAnnotationCount }}</strong>
+            </div>
+            <div>
+              <span>当前图层</span>
+              <strong>{{ currentLabel.name }}</strong>
+            </div>
           </div>
         </section>
 
@@ -216,6 +265,7 @@
           <div class="metric-box">
             <p>Box：x={{ promptBox.x }}，y={{ promptBox.y }}</p>
             <p>w={{ promptBox.w }}，h={{ promptBox.h }}</p>
+            <p>Point：x={{ promptPoint.x }}，y={{ promptPoint.y }}</p>
             <p>视图：{{ activeViewName }}，Slice {{ currentSlice }}</p>
           </div>
           <div class="metric-grid">
@@ -270,6 +320,14 @@
           <i class="el-icon-crop"></i>
           <span>框选</span>
         </button>
+        <button type="button" :class="{ active: tool === 'point' }" @click="setTool('point')">
+          <i class="el-icon-location-outline"></i>
+          <span>点选</span>
+        </button>
+        <button type="button" :class="{ active: tool === 'polygon' }" @click="setTool('polygon')">
+          <i class="el-icon-share"></i>
+          <span>轮廓</span>
+        </button>
         <button type="button" :class="{ active: tool === 'brush' }" @click="setTool('brush')">
           <i class="el-icon-edit"></i>
           <span>补画</span>
@@ -307,6 +365,9 @@
 
 <script>
 import { getImagingInfo } from '@/api/imaging'
+import { createInference, getAiResultsByImaging, confirmAiResult, createReportDraft } from '@/api/ai'
+import { listStudies, uploadStudy, getStudySeries, getSeriesInstances } from '@/api/study'
+import AiResultPanel from './components/AiResultPanel'
 import pako from 'pako'
 import sourceVolumeUrl from '../../../../影像数据/lung_001.nii.gz'
 import labelVolumeUrl from '../../../../影像数据/lung_001.nii（标注）.gz'
@@ -380,6 +441,7 @@ const defaultImagings = [
 
 export default {
   name: 'imagingViewer',
+  components: { AiResultPanel },
   data() {
     return {
       imagingData: {},
@@ -424,15 +486,32 @@ export default {
       zoom: 1,
       brushSize: 18,
       maskOpacity: 42,
+      showReferenceMask: false,
+      showManualLayer: true,
+      showAiOverlay: true,
       promptBox: { x: 156, y: 89, w: 214, h: 168 },
+      promptPoint: { x: 263, y: 173 },
       measurements: { area: '342.5', volume: '12.8', centerX: 263, centerY: 173 },
       aiScore: { confidence: '--', dice: '--' },
       machineAnnotations: [],
+      detectionResults: [],
+      segmentationResults: [],
+      classificationResults: [],
+      selectedCandidateId: '',
+      runningAiTask: '',
+      reportDraft: null,
+      backendBindingStatus: 'pending',
+      backendBindingPromise: null,
       annotationMarks: [],
       history: [],
       isDrawing: false,
       startPoint: null,
       pendingMark: null,
+      lastBrushPoint: null,
+      drawFrameId: null,
+      pendingDrawViews: {},
+      labelMaskCache: {},
+      imageSliceCache: {},
       confirmed: false
     }
   },
@@ -455,6 +534,8 @@ export default {
     currentToolName() {
       const map = {
         box: 'Box Prompt',
+        point: 'Point Prompt',
+        polygon: '轮廓标注',
         brush: '补画笔刷',
         erase: '擦除',
         ruler: '距离测量',
@@ -465,8 +546,14 @@ export default {
     activeViewName() {
       return this.getViewName(this.activeView)
     },
+    backendImagingId() {
+      return this.imagingData.backendImagingId || this.imagingData.compatibleImagingId || this.imagingData.id
+    },
     manualAnnotationCount() {
       return this.annotationMarks.filter(item => item.type !== 'ruler').length
+    },
+    currentSliceAnnotationCount() {
+      return this.annotationMarks.filter(item => item.view === this.activeView && item.slice === this.currentSlice && item.type !== 'ruler').length
     },
     rulerCount() {
       return this.annotationMarks.filter(item => item.type === 'ruler').length
@@ -490,6 +577,7 @@ export default {
           w: item.w,
           h: item.h,
           r: item.r,
+          points: item.points,
           x2: item.x2,
           y2: item.y2,
           erase: item.type === 'erase',
@@ -505,6 +593,10 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.drawScene)
+    if (this.drawFrameId) {
+      window.cancelAnimationFrame(this.drawFrameId)
+      this.drawFrameId = null
+    }
   },
   methods: {
     loadImagingData() {
@@ -539,6 +631,13 @@ export default {
       this.loadArchivedAnnotations(item)
       this.updateMeasurements()
       this.drawScene()
+      this.ensureBackendStudyBinding().then(() => {
+        this.loadAiResults()
+      }).catch(e => {
+        console.error('标准影像兼容记录绑定失败:', e)
+        this.backendBindingStatus = 'failed'
+        this.$message.warning('后端标准影像记录未就绪，AI 与报告会等待后端恢复')
+      })
     },
     mergeDatasetMeta(savedMeta) {
       const saved = savedMeta || {}
@@ -582,6 +681,14 @@ export default {
     normalizeImaging(item) {
       return {
         id: item.id,
+        displayId: item.displayId || item.id,
+        backendImagingId: item.backendImagingId || item.compatibleImagingId || item.imagingId || item.imaging_id,
+        studyRecordId: item.studyRecordId || item.study_record_id,
+        studyUid: item.studyUid || item.study_uid,
+        seriesRecordId: item.seriesRecordId || item.series_record_id,
+        seriesUid: item.seriesUid || item.series_uid,
+        instanceRecordId: item.instanceRecordId || item.instance_record_id,
+        instanceUid: item.instanceUid || item.sopUid || item.sop_uid,
         patientId: item.patientId,
         patientName: item.patientName || item.name || '张明',
         gender: item.gender || '男',
@@ -599,16 +706,140 @@ export default {
         remark: item.remark || item.description || '胸部 CT 影像，当前需完成人工分割标注并提交主治医生诊断。'
       }
     },
+    ensureBackendStudyBinding() {
+      if (this.backendBindingPromise) return this.backendBindingPromise
+      if (!this.imagingData || !this.imagingData.patientId) {
+        return Promise.reject(new Error('missing-patient'))
+      }
+      if (this.imagingData.backendImagingId && this.imagingData.studyRecordId) {
+        this.backendBindingStatus = 'ready'
+        return Promise.resolve(this.imagingData)
+      }
+      this.backendBindingStatus = 'resolving'
+      const params = {
+        patientId: this.imagingData.patientId,
+        modality: this.imagingData.type,
+        bodyPart: this.imagingData.bodyPart
+      }
+      this.backendBindingPromise = listStudies(params).then(res => {
+        const list = res.code === 200 && Array.isArray(res.data) ? res.data : []
+        const matched = this.findMatchingStudy(list)
+        if (matched) {
+          return this.bindStudyRecord(matched)
+        }
+        return this.createCompatibleStudy()
+      }).then(bound => {
+        this.backendBindingStatus = 'ready'
+        this.backendBindingPromise = null
+        return bound
+      }).catch(error => {
+        this.backendBindingPromise = null
+        this.backendBindingStatus = 'failed'
+        throw error
+      })
+      return this.backendBindingPromise
+    },
+    findMatchingStudy(list) {
+      const displayId = Number(this.imagingData.id)
+      const backendId = Number(this.imagingData.backendImagingId)
+      return list.find(study => {
+        if (backendId && Number(study.imagingId) === backendId) return true
+        const meta = this.safeParseJson(study.metadataJson || '{}')
+        return Number(meta.source_demo_imaging_id) === displayId
+      }) || list[0]
+    },
+    createCompatibleStudy() {
+      const metadata = {
+        source: 'viewer-demo-compatible',
+        source_demo_imaging_id: this.imagingData.id,
+        source_file: this.datasetMeta.sourceVolume.fileName,
+        window_width: this.windowWidth,
+        window_level: this.windowCenter,
+        note: '由 Viewer 自动登记，用于保证 AI/报告链路使用真实后端影像 ID'
+      }
+      return uploadStudy({
+        patientId: this.imagingData.patientId,
+        doctorId: 10001,
+        hospitalId: 1000,
+        patientName: this.imagingData.patientName,
+        gender: this.imagingData.gender,
+        age: this.imagingData.age,
+        phone: this.imagingData.phone,
+        modality: this.imagingData.type || 'CT',
+        bodyPart: this.imagingData.bodyPart || '胸部',
+        fileName: this.datasetMeta.sourceVolume.fileName,
+        fileUri: 'minio://medical-imaging/studies/' + this.datasetMeta.sourceVolume.fileName,
+        fileSize: Number(String(this.imagingData.fileSize || '').replace(/[^\d]/g, '')) || 0,
+        description: this.imagingData.remark,
+        seriesDescription: this.imagingData.bodyPart + ' ' + this.imagingData.type + ' Viewer 标注序列',
+        sliceCount: this.totalSlices,
+        metadataJson: JSON.stringify(metadata),
+        anonymized: true
+      }).then(res => {
+        if (res.code !== 200 || !res.data || !res.data.study) {
+          throw new Error(res.message || 'study-upload-failed')
+        }
+        return this.applyBackendBinding(res.data.study, res.data.series, res.data.instance, res.data.compatibleImaging)
+      })
+    },
+    bindStudyRecord(study) {
+      return getStudySeries(study.id).then(res => {
+        const series = res.code === 200 && res.data && res.data.length ? res.data[0] : null
+        if (!series) {
+          return this.applyBackendBinding(study, null, null, null)
+        }
+        return getSeriesInstances(series.id).then(instanceRes => {
+          const instance = instanceRes.code === 200 && instanceRes.data && instanceRes.data.length ? instanceRes.data[0] : null
+          return this.applyBackendBinding(study, series, instance, null)
+        })
+      })
+    },
+    applyBackendBinding(study, series, instance, compatibleImaging) {
+      const patch = {
+        backendImagingId: study.imagingId || (compatibleImaging && compatibleImaging.id),
+        studyRecordId: study.id,
+        studyUid: study.studyUid,
+        seriesRecordId: series && series.id,
+        seriesUid: series && series.seriesUid,
+        instanceRecordId: instance && instance.id,
+        instanceUid: instance && instance.sopUid
+      }
+      this.imagingData = Object.assign({}, this.imagingData, patch)
+      this.persistBackendBinding(patch)
+      return this.imagingData
+    },
+    persistBackendBinding(patch) {
+      const list = this.ensureDemoImagings()
+      const nextList = list.map(item => {
+        if (Number(item.id) !== Number(this.imagingData.id)) return item
+        return Object.assign({}, item, patch)
+      })
+      localStorage.setItem(IMAGING_KEY, JSON.stringify(nextList))
+    },
     loadArchivedAnnotations(item) {
       const result = item.medsamResult || {}
       if (result.promptBox) {
         this.promptBox = Object.assign({}, result.promptBox)
+      }
+      if (result.promptPoint) {
+        this.promptPoint = Object.assign({}, result.promptPoint)
       }
       if (result.measurements) {
         this.measurements = Object.assign({}, result.measurements)
       }
       if (result.aiScore) {
         this.aiScore = Object.assign({}, result.aiScore)
+      }
+      if (result.aiResults) {
+        this.detectionResults = this.normalizeAiResultList(result.aiResults.detectionResults || [])
+        this.segmentationResults = this.normalizeAiResultList(result.aiResults.segmentationResults || [])
+        this.classificationResults = this.normalizeAiResultList(result.aiResults.classificationResults || [])
+        this.selectedCandidateId = result.aiResults.selectedCandidateId || ''
+      } else {
+        this.detectionResults = []
+        this.segmentationResults = []
+        this.classificationResults = []
+        this.selectedCandidateId = ''
       }
       this.machineAnnotations = result.machineAnnotations ? result.machineAnnotations.slice() : []
       if (result.annotationMarks) {
@@ -623,6 +854,34 @@ export default {
       this.confirmed = item.radiologyStatus === '已提交主治医生' || item.radiologyStatus === '已确认' || item.radiologyStatus === '诊断报告已上传'
       this.taskStatus = this.confirmed ? item.radiologyStatus : '人工标注中'
     },
+    loadAiResults() {
+      const imagingId = this.backendImagingId
+      if (!imagingId) return
+      getAiResultsByImaging(imagingId).then(res => {
+        if (res.code === 200 && Array.isArray(res.data) && res.data.length) {
+          const list = this.normalizeAiResultList(res.data)
+          this.detectionResults = list.filter(item => item.taskType === 'detection')
+          this.segmentationResults = list.filter(item => item.taskType === 'segmentation')
+          this.classificationResults = list.filter(item => item.taskType === 'classification')
+          this.syncAiMeasurements()
+          this.drawScene()
+        }
+      }).catch(() => {})
+    },
+    normalizeAiResultList(list) {
+      return (list || []).map(item => {
+        const parsed = this.safeParseJson(item.resultJson || item.result_json || '{}')
+        return Object.assign({}, item, {
+          localId: item.id || item.resultId || item.result_id || Date.now() + Math.random(),
+          resultId: item.resultId || item.result_id,
+          taskType: item.taskType || item.task_type,
+          modelName: item.modelName || item.model_name || '',
+          modelVersion: item.modelVersion || item.model_version || '',
+          confirmStatus: item.confirmStatus === undefined ? (item.confirm_status || 0) : item.confirmStatus,
+          parsed
+        })
+      })
+    },
     normalizeAnnotationMark(item) {
       return Object.assign({
         id: item.id || Date.now() + Math.floor(Math.random() * 10000),
@@ -632,6 +891,262 @@ export default {
         labelId: item.labelId || 'lesion',
         time: item.time || this.formatShortTime(new Date())
       }, item)
+    },
+    safeParseJson(text) {
+      if (!text) return {}
+      if (typeof text === 'object') return text
+      try {
+        return JSON.parse(text)
+      } catch (e) {
+        return {}
+      }
+    },
+    buildAiRequest(taskType, modelId) {
+      const prompt = this.buildPromptPayload(taskType)
+      return {
+        imagingId: this.backendImagingId,
+        studyRecordId: this.imagingData.studyRecordId,
+        seriesRecordId: this.imagingData.seriesRecordId,
+        instanceRecordId: this.imagingData.instanceRecordId,
+        studyId: this.imagingData.studyUid || ('ST-DEMO-' + this.imagingData.id),
+        seriesId: this.imagingData.seriesUid || ('SE-DEMO-' + this.imagingData.id),
+        instanceId: this.imagingData.instanceUid || ('IM' + this.currentSlice),
+        modelId,
+        taskType,
+        modality: this.imagingData.type || 'CT',
+        promptJson: JSON.stringify(prompt),
+        preprocessJson: JSON.stringify({
+          window_width: this.windowWidth,
+          window_level: this.windowCenter,
+          resize: 1024
+        }),
+        userId: 10000010
+      }
+    },
+    buildPromptPayload(taskType) {
+      if (taskType === 'segmentation' && this.tool === 'point' && this.promptPoint.x !== undefined) {
+        return {
+          type: 'point',
+          points: [[this.promptPoint.x, this.promptPoint.y]],
+          labels: [1],
+          coord_space: 'viewer',
+          slice_index: this.currentSlice,
+          view: this.activeView
+        }
+      }
+      return {
+        type: 'box',
+        coords: [this.promptBox.x, this.promptBox.y, this.promptBox.x + this.promptBox.w, this.promptBox.y + this.promptBox.h],
+        coord_space: 'viewer',
+        slice_index: this.currentSlice,
+        view: this.activeView
+      }
+    },
+    runDetection() {
+      this.runAiTask('detection', 'lesion_det_demo_v1')
+    },
+    runSegmentation() {
+      if (this.tool !== 'point' && (!this.promptBox.w || this.promptBox.w < 8)) {
+        this.$message.warning('请先框选病灶或选择检测候选框')
+        return
+      }
+      this.runAiTask('segmentation', 'medsam_v1.0')
+    },
+    runClassification() {
+      if (!this.segmentationResults.length) {
+        this.$message.warning('请先完成分割，再进行 ROI 分类')
+        return
+      }
+      this.runAiTask('classification', 'lesion_cls_demo_v1')
+    },
+    runAiTask(taskType, modelId) {
+      this.runningAiTask = taskType
+      this.ensureBackendStudyBinding().then(() => {
+        const request = this.buildAiRequest(taskType, modelId)
+        return createInference(taskType, request).then(res => ({ res, request }))
+      }).then(({ res, request }) => {
+        if (res.code === 200 && res.data && res.data.result) {
+          this.applyAiResult(this.normalizeAiResultList([res.data.result])[0])
+          this.$message.success(this.getAiTaskName(taskType) + '已完成')
+          return
+        }
+        throw new Error('empty-result')
+      }).catch(error => {
+        console.error('AI 后端任务失败:', error)
+        const request = this.buildAiRequest(taskType, modelId)
+        const localResult = this.createLocalAiResult(taskType, modelId, request)
+        this.applyAiResult(localResult)
+        this.$message.warning(this.getAiTaskName(taskType) + '后端不可用，已保留本地演示结果')
+      }).finally(() => {
+        this.runningAiTask = ''
+        this.drawScene()
+      })
+    },
+    applyAiResult(result) {
+      if (!result) return
+      if (result.taskType === 'detection') {
+        this.detectionResults.unshift(result)
+        this.machineAnnotations = (result.parsed.boxes || []).map(box => {
+          const coords = box.coords || [0, 0, 0, 0]
+          return {
+            id: box.id,
+            type: 'bbox',
+            label: box.label,
+            confidence: box.confidence,
+            x: coords[0],
+            y: coords[1],
+            w: coords[2] - coords[0],
+            h: coords[3] - coords[1],
+            slice: box.slice_index
+          }
+        })
+      }
+      if (result.taskType === 'segmentation') {
+        this.segmentationResults.unshift(result)
+        this.syncAiMeasurements()
+      }
+      if (result.taskType === 'classification') {
+        this.classificationResults.unshift(result)
+      }
+    },
+    syncAiMeasurements() {
+      const latest = this.segmentationResults[0]
+      if (!latest || !latest.parsed || !latest.parsed.measurements) return
+      const m = latest.parsed.measurements
+      this.measurements = Object.assign({}, this.measurements, {
+        area: String(m.area_mm2 || this.measurements.area),
+        volume: String(m.volume_cm3 || this.measurements.volume),
+        longDiameter: m.long_diameter_mm,
+        shortDiameter: m.short_diameter_mm
+      })
+      this.aiScore = {
+        confidence: latest.confidence ? Math.round(latest.confidence * 100) + '%' : '--',
+        dice: 'demo'
+      }
+    },
+    applyCandidateBox(box) {
+      const coords = box.coords || [0, 0, 0, 0]
+      this.selectedCandidateId = box.id
+      this.promptBox = {
+        x: coords[0],
+        y: coords[1],
+        w: coords[2] - coords[0],
+        h: coords[3] - coords[1]
+      }
+      this.tool = 'box'
+      this.currentSlice = box.slice_index || this.currentSlice
+      this.updateMeasurements()
+      this.drawScene()
+    },
+    confirmAiResultItem(item) {
+      const localConfirm = () => {
+        item.confirmStatus = 1
+        this.$message.success('AI 结果已采纳，归档时会记录模型版本与医生确认状态')
+      }
+      if (!item.id) {
+        localConfirm()
+        return
+      }
+      confirmAiResult(item.id, {
+        decision: 1,
+        doctorId: 10000010,
+        comment: '医生采纳该 AI 辅助结果'
+      }).then(res => {
+        if (res.code === 200 && res.data) {
+          Object.assign(item, this.normalizeAiResultList([res.data])[0])
+        } else {
+          localConfirm()
+        }
+      }).catch(localConfirm)
+    },
+    createStructuredDraft() {
+      this.ensureBackendStudyBinding().then(() => {
+        const selectedResultIds = this.getConfirmedAiResults().filter(item => item.id).map(item => item.id)
+        return createReportDraft({
+          imagingId: this.backendImagingId,
+          studyRecordId: this.imagingData.studyRecordId,
+          selectedResultIds
+        })
+      }).then(res => {
+        if (res.code === 200 && res.data) {
+          this.reportDraft = res.data
+          this.$message.success('结构化报告草稿已生成')
+          this.submitReport()
+          return
+        }
+        throw new Error('empty-draft')
+      }).catch(error => {
+        console.error('结构化报告草稿生成失败:', error)
+        this.$message.error('结构化报告草稿生成失败，请先确认 AI 结果并检查后端影像记录')
+      })
+    },
+    createLocalReportDraft() {
+      const segmentation = this.segmentationResults[0]
+      const classification = this.classificationResults[0]
+      const m = segmentation && segmentation.parsed ? segmentation.parsed.measurements || {} : {}
+      const label = classification && classification.parsed ? classification.parsed.label : '待医生判断'
+      return {
+        imagingId: this.backendImagingId,
+        patientId: this.imagingData.patientId,
+        examinationType: this.imagingData.type,
+        bodyPart: this.imagingData.bodyPart,
+        examinationFindings: `${this.imagingData.bodyPart}${this.imagingData.type}检查。AI 分割提示病灶长径约 ${m.long_diameter_mm || '-'} mm，短径约 ${m.short_diameter_mm || '-'} mm，面积约 ${m.area_mm2 || this.measurements.area} mm²，体积约 ${m.volume_cm3 || this.measurements.volume} cm³。`,
+        aiSuggestion: `AI 辅助提示：${label}。结果仅供医生参考，最终诊断由医生确认。`,
+        diagnosticOpinion: '',
+        contentJson: JSON.stringify({ aiResults: this.getConfirmedAiResults() })
+      }
+    },
+    getConfirmedAiResults() {
+      return [].concat(this.detectionResults, this.segmentationResults, this.classificationResults)
+        .filter(item => item.confirmStatus === 1)
+    },
+    createLocalAiResult(taskType, modelId, request) {
+      const base = {
+        id: null,
+        localId: Date.now() + '-' + taskType,
+        resultId: 'LOCAL-' + Date.now() + '-' + taskType,
+        taskType,
+        modelId,
+        modelName: taskType === 'segmentation' ? 'MedSAM' : (taskType === 'detection' ? 'lesion_det_demo' : 'lesion_cls_demo'),
+        modelVersion: 'v1.0',
+        confirmStatus: 0,
+        confidence: taskType === 'classification' ? 0.87 : 0.91
+      }
+      const coords = this.safeParseJson(request.promptJson).coords || [120, 96, 286, 260]
+      if (taskType === 'detection') {
+        base.parsed = {
+          boxes: [
+            { id: 'DET-1', label: 'nodule_candidate', confidence: 0.91, coords: [118, 96, 286, 260], slice_index: this.currentSlice },
+            { id: 'DET-2', label: 'vascular_overlap', confidence: 0.84, coords: [310, 178, 382, 244], slice_index: this.currentSlice },
+            { id: 'DET-3', label: 'low_density_shadow', confidence: 0.8, coords: [214, 292, 284, 344], slice_index: this.currentSlice }
+          ]
+        }
+      } else if (taskType === 'segmentation') {
+        const w = Math.max(1, coords[2] - coords[0])
+        const h = Math.max(1, coords[3] - coords[1])
+        base.parsed = {
+          prompt_box: coords,
+          mask_uri: `minio://medical-imaging/masks/${this.backendImagingId}/IM${this.currentSlice}/${this.currentSlice}/${modelId}.png`,
+          measurements: {
+            area_mm2: Number((w * h * 0.36 * 0.6934 * 0.6934).toFixed(1)),
+            volume_cm3: Number((w * h * 0.36 * 0.6934 * 0.6934 * 3 / 1000).toFixed(2)),
+            long_diameter_mm: Number((Math.max(w, h) * 0.6934).toFixed(1)),
+            short_diameter_mm: Number((Math.min(w, h) * 0.6934).toFixed(1))
+          }
+        }
+      } else {
+        base.parsed = {
+          label: '疑似肺结节',
+          confidence: 0.87,
+          probability: { '疑似肺结节': 0.87, '炎性改变': 0.09, '血管重叠': 0.04 }
+        }
+      }
+      base.resultJson = JSON.stringify(base.parsed)
+      return base
+    },
+    getAiTaskName(taskType) {
+      const map = { detection: '候选检测', segmentation: 'MedSAM 分割', classification: '病灶分类' }
+      return map[taskType] || taskType
     },
     loadRealVolumes() {
       const self = this
@@ -645,6 +1160,8 @@ export default {
           source: results[0],
           label: results[1]
         }
+        self.labelMaskCache = {}
+        self.imageSliceCache = {}
         self.totalSlices = results[0].dims[2]
         if (results[1].labelStats && results[1].labelStats.peakSlice) {
           self.currentSlice = Math.min(results[1].labelStats.peakSlice, self.totalSlices)
@@ -815,22 +1332,26 @@ export default {
       this.currentSeriesIndex = index
       this.totalSlices = this.seriesList[index].count
       this.currentSlice = Math.min(this.currentSlice, this.totalSlices)
+      this.cancelPendingDrawing()
       this.drawScene()
     },
     selectSlice(value) {
       this.currentSlice = Number(value)
+      this.cancelPendingDrawing()
       this.drawScene()
     },
     selectView(viewKey) {
       this.activeView = viewKey
-      this.drawScene()
+      this.drawScene(viewKey)
     },
     selectLabel(labelId) {
       this.activeLabelId = labelId
     },
     setTool(tool) {
       this.tool = tool
+      this.cancelPendingDrawing()
       this.taskStatus = tool === 'pan' ? '阅片查看中' : '人工标注中'
+      this.drawScene(this.activeView)
     },
     saveHistory() {
       this.history.push({
@@ -856,6 +1377,12 @@ export default {
       this.updateMeasurements()
       this.drawScene()
     },
+    cancelPendingDrawing() {
+      this.isDrawing = false
+      this.startPoint = null
+      this.pendingMark = null
+      this.lastBrushPoint = null
+    },
     clearCurrentSlice() {
       const before = this.annotationMarks.length
       this.saveHistory()
@@ -876,13 +1403,39 @@ export default {
     getCanvasPoint(event, viewKey) {
       const canvas = this.getRef('imageCanvas_' + viewKey)
       if (!canvas) return { x: 0, y: 0 }
-      const rect = canvas.getBoundingClientRect()
+      const rect = this.getDisplayedCanvasBounds(canvas)
       return {
-        x: Math.round((event.clientX - rect.left) * this.canvasWidth / rect.width),
-        y: Math.round((event.clientY - rect.top) * this.canvasHeight / rect.height)
+        x: Math.round(Math.max(0, Math.min(rect.width, event.clientX - rect.left)) * this.canvasWidth / rect.width),
+        y: Math.round(Math.max(0, Math.min(rect.height, event.clientY - rect.top)) * this.canvasHeight / rect.height)
+      }
+    },
+    getDisplayedCanvasBounds(canvas) {
+      const rect = canvas.getBoundingClientRect()
+      const intrinsicRatio = this.canvasWidth / this.canvasHeight
+      const boxRatio = rect.width / Math.max(1, rect.height)
+      let width = rect.width
+      let height = rect.height
+      let left = rect.left
+      let top = rect.top
+      if (boxRatio > intrinsicRatio) {
+        height = rect.height
+        width = height * intrinsicRatio
+        left = rect.left + (rect.width - width) / 2
+      } else {
+        width = rect.width
+        height = width / intrinsicRatio
+        top = rect.top + (rect.height - height) / 2
+      }
+      return {
+        left: left,
+        top: top,
+        width: Math.max(1, width),
+        height: Math.max(1, height)
       }
     },
     handlePointerDown(event, viewKey) {
+      if (event.button !== undefined && event.button !== 0) return
+      event.preventDefault()
       this.selectView(viewKey)
       const point = this.getCanvasPoint(event, viewKey)
       if (this.tool === 'pan') {
@@ -894,7 +1447,25 @@ export default {
       this.isDrawing = true
       this.startPoint = point
       if (this.tool === 'brush' || this.tool === 'erase') {
-        this.applyBrush(point, viewKey)
+        this.beginBrushStroke(point, viewKey)
+      } else if (this.tool === 'point') {
+        this.promptPoint = { x: point.x, y: point.y }
+        this.pendingMark = Object.assign(this.createBaseMark('point', point, viewKey), {
+          r: Math.max(5, Math.round(this.brushSize * 0.4))
+        })
+        this.annotationMarks.push(Object.assign({}, this.pendingMark, {
+          id: this.createId(),
+          time: this.formatShortTime(new Date())
+        }))
+        this.isDrawing = false
+        this.pendingMark = null
+        this.updateMeasurements()
+        this.drawScene(viewKey)
+      } else if (this.tool === 'polygon') {
+        this.pendingMark = Object.assign(this.createBaseMark('polygon', point, viewKey), {
+          points: [point]
+        })
+        this.lastBrushPoint = point
       } else if (this.tool === 'box') {
         this.pendingMark = this.createBaseMark('box', point, viewKey)
         this.promptBox = { x: point.x, y: point.y, w: 1, h: 1 }
@@ -908,9 +1479,14 @@ export default {
     },
     handlePointerMove(event, viewKey) {
       if (!this.isDrawing) return
+      event.preventDefault()
       const point = this.getCanvasPoint(event, viewKey)
       if (this.tool === 'brush' || this.tool === 'erase') {
-        this.applyBrush(point, viewKey)
+        this.appendBrushPoint(point, viewKey)
+        return
+      }
+      if (this.tool === 'polygon' && this.pendingMark) {
+        this.appendPolygonPoint(point, viewKey)
         return
       }
       if (this.tool === 'box' && this.pendingMark) {
@@ -922,7 +1498,7 @@ export default {
         }
         this.pendingMark = Object.assign(this.pendingMark, this.promptBox)
         this.updateMeasurements()
-        this.drawScene()
+        this.drawScene(viewKey)
         return
       }
       if (this.tool === 'ruler' && this.pendingMark) {
@@ -931,13 +1507,24 @@ export default {
         this.pendingMark.x2 = point.x
         this.pendingMark.y2 = point.y
         this.pendingMark.length = Math.sqrt(dx * dx + dy * dy) * 0.6934
-        this.drawScene()
+        this.drawScene(viewKey)
       }
     },
     handlePointerUp(event, viewKey) {
       if (!this.isDrawing) return
+      event.preventDefault()
       this.isDrawing = false
-      if (this.tool === 'box' && this.pendingMark && this.promptBox.w > 8 && this.promptBox.h > 8) {
+      if ((this.tool === 'brush' || this.tool === 'erase') && this.pendingMark && this.pendingMark.points && this.pendingMark.points.length) {
+        this.annotationMarks.push(Object.assign({}, this.pendingMark, {
+          id: this.createId(),
+          time: this.formatShortTime(new Date())
+        }))
+      } else if (this.tool === 'polygon' && this.pendingMark && this.pendingMark.points && this.pendingMark.points.length > 2) {
+        this.annotationMarks.push(Object.assign({}, this.pendingMark, {
+          id: this.createId(),
+          time: this.formatShortTime(new Date())
+        }))
+      } else if (this.tool === 'box' && this.pendingMark && this.promptBox.w > 8 && this.promptBox.h > 8) {
         this.annotationMarks.push(Object.assign({}, this.pendingMark, {
           id: this.createId(),
           time: this.formatShortTime(new Date())
@@ -947,13 +1534,14 @@ export default {
           id: this.createId(),
           time: this.formatShortTime(new Date())
         }))
-      } else if (this.tool === 'box' || this.tool === 'ruler') {
+      } else if (this.tool === 'box' || this.tool === 'ruler' || this.tool === 'polygon') {
         this.history.pop()
       }
       this.pendingMark = null
       this.startPoint = null
+      this.lastBrushPoint = null
       this.updateMeasurements()
-      this.drawScene()
+      this.drawScene(viewKey)
     },
     handleWheel(event) {
       this.changeZoom(event.deltaY > 0 ? -0.08 : 0.08)
@@ -973,13 +1561,34 @@ export default {
     createId() {
       return Date.now() + Math.floor(Math.random() * 10000)
     },
-    applyBrush(point, viewKey) {
-      const mark = Object.assign(this.createBaseMark(this.tool === 'erase' ? 'erase' : 'brush', point, viewKey), {
-        r: this.tool === 'erase' ? this.brushSize + 4 : this.brushSize
+    beginBrushStroke(point, viewKey) {
+      this.pendingMark = Object.assign(this.createBaseMark(this.tool === 'erase' ? 'erase' : 'brush', point, viewKey), {
+        r: this.tool === 'erase' ? this.brushSize + 4 : this.brushSize,
+        points: [point]
       })
-      this.annotationMarks.push(mark)
-      this.updateMeasurements()
-      this.drawScene()
+      this.lastBrushPoint = point
+      this.drawScene(viewKey)
+    },
+    appendBrushPoint(point, viewKey) {
+      if (!this.pendingMark || !this.pendingMark.points) return
+      const last = this.lastBrushPoint || this.pendingMark.points[this.pendingMark.points.length - 1]
+      const dx = point.x - last.x
+      const dy = point.y - last.y
+      const minDistance = Math.max(4, Math.round(this.brushSize * 0.35))
+      if (Math.sqrt(dx * dx + dy * dy) < minDistance) return
+      this.pendingMark.points.push(point)
+      this.lastBrushPoint = point
+      this.drawScene(viewKey)
+    },
+    appendPolygonPoint(point, viewKey) {
+      if (!this.pendingMark || !this.pendingMark.points) return
+      const last = this.lastBrushPoint || this.pendingMark.points[this.pendingMark.points.length - 1]
+      const dx = point.x - last.x
+      const dy = point.y - last.y
+      if (Math.sqrt(dx * dx + dy * dy) < 8) return
+      this.pendingMark.points.push(point)
+      this.lastBrushPoint = point
+      this.drawScene(viewKey)
     },
     adjustWindow(widthDelta, centerDelta) {
       this.windowWidth = Math.max(80, this.windowWidth + widthDelta)
@@ -1011,20 +1620,27 @@ export default {
       }
       this.persistImagingArchive('已提交主治医生')
       const context = {
-        imagingId: this.imagingData.id,
+        imagingId: this.backendImagingId,
+        displayImagingId: this.imagingData.id,
+        studyRecordId: this.imagingData.studyRecordId,
         promptBox: this.promptBox,
         aiScore: this.aiScore,
         measurements: this.measurements,
         machineAnnotations: this.machineAnnotations,
         manualAnnotations: this.manualAnnotations,
         annotationMarks: this.annotationMarks,
-        findings: `${this.imagingData.type}${this.imagingData.bodyPart}影像已完成人工分割标注，主要标注层面为 ${this.activeViewName} Slice ${this.currentSlice}，估算标注面积约 ${this.measurements.area} mm²，体积约 ${this.measurements.volume} cm³。`,
+        aiResults: this.createAiArchive(),
+        reportDraft: this.reportDraft,
+        findings: this.reportDraft && this.reportDraft.examinationFindings
+          ? this.reportDraft.examinationFindings
+          : `${this.imagingData.type}${this.imagingData.bodyPart}影像已完成人工分割标注，主要标注层面为 ${this.activeViewName} Slice ${this.currentSlice}，估算标注面积约 ${this.measurements.area} mm²，体积约 ${this.measurements.volume} cm³。`,
+        aiSuggestion: this.reportDraft ? this.reportDraft.aiSuggestion : '',
         opinion: '请主治医生结合临床表现、实验室检查和随访影像综合判断。'
       }
       sessionStorage.setItem(VIEWER_CONTEXT_KEY, JSON.stringify(context))
       this.$router.push({
         path: '/diagnosisWrite',
-        query: { imagingId: this.imagingData.id, patientId: this.imagingData.patientId }
+        query: { imagingId: this.backendImagingId, patientId: this.imagingData.patientId }
       })
     },
     persistImagingArchive(status) {
@@ -1051,8 +1667,9 @@ export default {
         medsamResult: {
           modelName: 'MedSAM（待接入）',
           workflowMode: 'manual-first',
-          promptType: 'manual-box',
+          promptType: this.tool === 'point' ? 'manual-point' : 'manual-box',
           promptBox: Object.assign({}, this.promptBox),
+          promptPoint: Object.assign({}, this.promptPoint),
           slice: this.currentSlice,
           view: this.activeView,
           series: this.seriesList[this.currentSeriesIndex].name,
@@ -1061,12 +1678,23 @@ export default {
           machineAnnotations: this.machineAnnotations.slice(),
           manualAnnotations: this.manualAnnotations,
           annotationMarks: JSON.parse(JSON.stringify(this.annotationMarks)),
+          aiResults: this.createAiArchive(),
+          reportDraft: this.reportDraft,
           labelStats: this.createLabelStats(),
           datasetMeta: Object.assign({}, this.datasetMeta),
           sourceVolume: Object.assign({}, this.datasetMeta.sourceVolume),
           labelVolume: Object.assign({}, this.datasetMeta.labelVolume),
           updatedAt: this.formatDateTime(new Date())
         }
+      }
+    },
+    createAiArchive() {
+      return {
+        detectionResults: JSON.parse(JSON.stringify(this.detectionResults)),
+        segmentationResults: JSON.parse(JSON.stringify(this.segmentationResults)),
+        classificationResults: JSON.parse(JSON.stringify(this.classificationResults)),
+        selectedCandidateId: this.selectedCandidateId,
+        confirmedResultIds: this.getConfirmedAiResults().map(item => item.resultId || item.localId)
       }
     },
     persistAnnotationRows(result) {
@@ -1119,8 +1747,11 @@ export default {
     updateMeasurements() {
       const voxelArea = 0.6934 * 0.6934
       const brushAreaPx = this.annotationMarks.reduce((sum, item) => {
-        if (item.type === 'brush') return sum + Math.PI * item.r * item.r
-        if (item.type === 'erase') return sum - Math.PI * item.r * item.r * 0.72
+        const pointCount = item.points && item.points.length ? item.points.length : 1
+        if (item.type === 'brush') return sum + Math.PI * item.r * item.r * Math.max(1, pointCount * 0.36)
+        if (item.type === 'erase') return sum - Math.PI * item.r * item.r * Math.max(1, pointCount * 0.28)
+        if (item.type === 'polygon') return sum + this.getPolygonArea(item.points || [])
+        if (item.type === 'point') return sum + Math.PI * Math.pow(item.r || 8, 2)
         return sum
       }, 0)
       const boxAreaPx = this.promptBox.w > 8 && this.promptBox.h > 8 ? this.promptBox.w * this.promptBox.h * 0.36 : 0
@@ -1142,11 +1773,34 @@ export default {
       })
       return Object.keys(seen).length
     },
-    drawScene() {
-      this.$nextTick(() => {
+    getPolygonArea(points) {
+      if (!points || points.length < 3) return 0
+      let area = 0
+      for (let i = 0; i < points.length; i++) {
+        const current = points[i]
+        const next = points[(i + 1) % points.length]
+        area += current.x * next.y - next.x * current.y
+      }
+      return Math.abs(area / 2)
+    },
+    drawScene(viewKey) {
+      if (viewKey) {
+        this.pendingDrawViews[viewKey] = true
+      } else {
         this.views.forEach(view => {
-          this.drawImageCanvas(view.key)
-          this.drawMaskCanvas(view.key)
+          this.pendingDrawViews[view.key] = true
+        })
+      }
+      if (this.drawFrameId) return
+      this.drawFrameId = window.requestAnimationFrame(() => {
+        const drawKeys = Object.keys(this.pendingDrawViews)
+        this.pendingDrawViews = {}
+        this.drawFrameId = null
+        this.$nextTick(() => {
+          drawKeys.forEach(key => {
+            this.drawImageCanvas(key)
+            this.drawMaskCanvas(key)
+          })
         })
       })
     },
@@ -1205,6 +1859,11 @@ export default {
       ctx.restore()
     },
     drawRealImageSlice(ctx, viewKey, w, h) {
+      const cacheKey = [viewKey, this.currentSlice, this.windowWidth, this.windowCenter, w, h].join(':')
+      if (this.imageSliceCache[cacheKey]) {
+        ctx.drawImage(this.imageSliceCache[cacheKey], 0, 0, w, h)
+        return
+      }
       const image = ctx.createImageData(w, h)
       const pixels = image.data
       const volume = this.volumeData.source
@@ -1225,7 +1884,16 @@ export default {
           pixels[idx + 3] = 255
         }
       }
-      ctx.putImageData(image, 0, 0)
+      const tempCanvas = document.createElement('canvas')
+      tempCanvas.width = w
+      tempCanvas.height = h
+      tempCanvas.getContext('2d').putImageData(image, 0, 0)
+      this.imageSliceCache[cacheKey] = tempCanvas
+      const cacheKeys = Object.keys(this.imageSliceCache)
+      if (cacheKeys.length > 36) {
+        delete this.imageSliceCache[cacheKeys[0]]
+      }
+      ctx.drawImage(tempCanvas, 0, 0, w, h)
     },
     getVoxelForView(data, dims, viewKey, x, y, w, h) {
       const dimX = dims[0]
@@ -1340,20 +2008,25 @@ export default {
       ctx.translate(-w / 2, -h / 2)
       ctx.globalAlpha = this.maskOpacity / 100
 
-      if (this.volumeData.label) {
+      if (this.showReferenceMask && this.volumeData.label) {
         this.drawRealLabelMask(ctx, viewKey, w, h)
       }
 
-      const marks = this.annotationMarks.filter(item => item.view === viewKey)
-      marks.forEach(mark => {
-        this.drawAnnotationMark(ctx, mark)
-      })
+      if (this.showManualLayer) {
+        const marks = this.annotationMarks.filter(item => item.view === viewKey && item.slice === this.currentSlice)
+        marks.forEach(mark => {
+          this.drawAnnotationMark(ctx, mark)
+        })
 
-      if (this.pendingMark && this.pendingMark.view === viewKey) {
-        this.drawAnnotationMark(ctx, this.pendingMark, true)
+        if (this.pendingMark && this.pendingMark.view === viewKey && this.pendingMark.slice === this.currentSlice) {
+          this.drawAnnotationMark(ctx, this.pendingMark, true)
+        }
       }
 
       ctx.globalAlpha = 1
+      if (this.showAiOverlay) {
+        this.drawAiOverlay(ctx, viewKey)
+      }
       if (viewKey === this.activeView && this.promptBox.w > 8 && this.promptBox.h > 8) {
         ctx.strokeStyle = this.confirmed ? '#3be283' : '#ffd166'
         ctx.lineWidth = 2
@@ -1366,12 +2039,81 @@ export default {
         ctx.font = '12px Arial'
         ctx.fillText(this.confirmed ? 'Archived Box' : 'Manual Box', this.promptBox.x + 8, Math.max(15, this.promptBox.y - 8))
       }
+      if (viewKey === this.activeView && this.promptPoint.x !== undefined) {
+        ctx.strokeStyle = '#38bdf8'
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.85)'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.arc(this.promptPoint.x, this.promptPoint.y, 5, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.beginPath()
+        ctx.moveTo(this.promptPoint.x - 11, this.promptPoint.y)
+        ctx.lineTo(this.promptPoint.x + 11, this.promptPoint.y)
+        ctx.moveTo(this.promptPoint.x, this.promptPoint.y - 11)
+        ctx.lineTo(this.promptPoint.x, this.promptPoint.y + 11)
+        ctx.stroke()
+      }
       ctx.restore()
+    },
+    drawAiOverlay(ctx, viewKey) {
+      if (viewKey !== this.activeView) return
+      const latestDetection = this.detectionResults[0]
+      const boxes = latestDetection && latestDetection.parsed ? latestDetection.parsed.boxes || [] : []
+      boxes
+        .filter(box => !box.slice_index || Number(box.slice_index) === Number(this.currentSlice))
+        .slice(0, 6)
+        .forEach(box => {
+        const coords = box.coords || [0, 0, 0, 0]
+        const active = box.id === this.selectedCandidateId
+        ctx.save()
+        ctx.strokeStyle = active ? '#38bdf8' : 'rgba(56, 189, 248, 0.72)'
+        ctx.lineWidth = active ? 3 : 1.5
+        ctx.setLineDash(active ? [] : [5, 4])
+        ctx.strokeRect(coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1])
+        ctx.setLineDash([])
+        ctx.fillStyle = active ? 'rgba(8, 145, 178, 0.9)' : 'rgba(15, 23, 42, 0.72)'
+        ctx.fillRect(coords[0], Math.max(0, coords[1] - 22), 148, 20)
+        ctx.fillStyle = '#ffffff'
+        ctx.font = '12px Arial'
+        ctx.fillText(`${box.label} ${Math.round(Number(box.confidence) * 100)}%`, coords[0] + 6, Math.max(14, coords[1] - 7))
+        ctx.restore()
+      })
+
+      const latestSegmentation = this.segmentationResults[0]
+      if (latestSegmentation && latestSegmentation.parsed && latestSegmentation.parsed.prompt_box) {
+        const coords = latestSegmentation.parsed.prompt_box
+        ctx.save()
+        ctx.strokeStyle = '#22c55e'
+        ctx.lineWidth = 2.5
+        ctx.strokeRect(coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1])
+        ctx.fillStyle = 'rgba(22, 163, 74, 0.82)'
+        ctx.fillRect(coords[0], coords[3] + 4, 124, 20)
+        ctx.fillStyle = '#ffffff'
+        ctx.font = '12px Arial'
+        ctx.fillText('AI Mask Overlay', coords[0] + 6, coords[3] + 18)
+        ctx.restore()
+      }
+
+      const latestClassification = this.classificationResults[0]
+      if (latestClassification && latestClassification.parsed && this.promptBox.w > 8) {
+        ctx.save()
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.92)'
+        ctx.fillRect(this.promptBox.x, this.promptBox.y + this.promptBox.h + 28, 138, 22)
+        ctx.fillStyle = '#111827'
+        ctx.font = '12px Arial'
+        ctx.fillText(latestClassification.parsed.label || 'classification', this.promptBox.x + 8, this.promptBox.y + this.promptBox.h + 43)
+        ctx.restore()
+      }
     },
     drawRealLabelMask(ctx, viewKey, w, h) {
       const labelVolume = this.volumeData.label
       const dims = labelVolume.dims
       const data = labelVolume.data
+      const cacheKey = [viewKey, this.currentSlice, w, h].join(':')
+      if (this.labelMaskCache[cacheKey]) {
+        ctx.drawImage(this.labelMaskCache[cacheKey], 0, 0, w, h)
+        return
+      }
       const image = ctx.createImageData(w, h)
       const pixels = image.data
       for (let y = 0; y < h; y++) {
@@ -1389,6 +2131,11 @@ export default {
       tempCanvas.width = w
       tempCanvas.height = h
       tempCanvas.getContext('2d').putImageData(image, 0, 0)
+      this.labelMaskCache[cacheKey] = tempCanvas
+      const cacheKeys = Object.keys(this.labelMaskCache)
+      if (cacheKeys.length > 24) {
+        delete this.labelMaskCache[cacheKeys[0]]
+      }
       ctx.drawImage(tempCanvas, 0, 0, w, h)
     },
     getLabelForView(data, dims, viewKey, x, y, w, h) {
@@ -1419,21 +2166,26 @@ export default {
     },
     drawAnnotationMark(ctx, mark, pending) {
       const color = this.getLabelColor(mark.labelId)
+      const points = mark.points && mark.points.length ? mark.points : [{ x: mark.x, y: mark.y }]
       if (mark.type === 'erase') {
         ctx.globalCompositeOperation = 'destination-out'
         ctx.fillStyle = 'rgba(0,0,0,1)'
-        ctx.beginPath()
-        ctx.arc(mark.x, mark.y, mark.r || this.brushSize, 0, Math.PI * 2)
-        ctx.fill()
+        points.forEach(point => {
+          ctx.beginPath()
+          ctx.arc(point.x, point.y, mark.r || this.brushSize, 0, Math.PI * 2)
+          ctx.fill()
+        })
         ctx.globalCompositeOperation = 'source-over'
         return
       }
       ctx.globalCompositeOperation = 'source-over'
       if (mark.type === 'brush') {
         ctx.fillStyle = color
-        ctx.beginPath()
-        ctx.arc(mark.x, mark.y, mark.r || this.brushSize, 0, Math.PI * 2)
-        ctx.fill()
+        points.forEach(point => {
+          ctx.beginPath()
+          ctx.arc(point.x, point.y, mark.r || this.brushSize, 0, Math.PI * 2)
+          ctx.fill()
+        })
         return
       }
       if (mark.type === 'box') {
@@ -1442,6 +2194,32 @@ export default {
         ctx.lineWidth = pending ? 1 : 2
         ctx.fillRect(mark.x, mark.y, mark.w || 1, mark.h || 1)
         ctx.strokeRect(mark.x, mark.y, mark.w || 1, mark.h || 1)
+        return
+      }
+      if (mark.type === 'point') {
+        ctx.fillStyle = color
+        ctx.strokeStyle = '#ffffff'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.arc(mark.x, mark.y, mark.r || 8, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.stroke()
+        return
+      }
+      if (mark.type === 'polygon') {
+        const polygonPoints = mark.points || []
+        if (polygonPoints.length < 2) return
+        ctx.strokeStyle = color
+        ctx.fillStyle = this.hexToRgba(color, pending ? 0.22 : 0.16)
+        ctx.lineWidth = pending ? 1.5 : 2
+        ctx.beginPath()
+        ctx.moveTo(polygonPoints[0].x, polygonPoints[0].y)
+        polygonPoints.slice(1).forEach(point => ctx.lineTo(point.x, point.y))
+        if (!pending && polygonPoints.length > 2) {
+          ctx.closePath()
+          ctx.fill()
+        }
+        ctx.stroke()
         return
       }
       if (mark.type === 'ruler') {
@@ -1489,6 +2267,8 @@ export default {
     getToolText(type) {
       const map = {
         box: '框选',
+        point: '点选',
+        polygon: '轮廓',
         brush: '补画',
         erase: '擦除',
         ruler: '测量'
@@ -1589,7 +2369,8 @@ export default {
   flex: 1;
   min-height: 680px;
   display: grid;
-  grid-template-columns: 248px minmax(620px, 1fr) 318px;
+  grid-template-columns: 248px minmax(640px, 1fr) 360px;
+  align-items: start;
   gap: 12px;
 }
 
@@ -1599,6 +2380,28 @@ export default {
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+}
+
+.right-dock {
+  position: sticky;
+  top: 76px;
+  max-height: calc(100vh - 92px);
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #b8d5cb;
+  }
+
+  > * {
+    flex: 0 0 auto;
+  }
 }
 
 .dock-panel {
@@ -1750,6 +2553,7 @@ export default {
 
 .viewer-center {
   min-width: 0;
+  align-self: start;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1800,16 +2604,17 @@ export default {
 }
 
 .viewport-grid {
-  flex: 1;
-  min-height: 620px;
+  flex: 0 0 auto;
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(280px, 1fr));
+  grid-auto-rows: clamp(260px, 24vw, 340px);
   gap: 12px;
 }
 
 .viewport {
   min-width: 0;
-  min-height: 290px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   border: 2px solid #d9e8e2;
@@ -1845,23 +2650,34 @@ export default {
 .canvas-stack {
   position: relative;
   flex: 1;
-  min-height: 252px;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background: #05090b;
   cursor: crosshair;
+  user-select: none;
+  touch-action: none;
 
   canvas {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: contain;
+    pointer-events: none;
   }
+}
+
+.image-layer {
+  background: #05090b;
 }
 
 .mask-layer {
   position: absolute;
   inset: 0;
+  background: transparent;
 }
 
 .crosshair {
@@ -1886,6 +2702,76 @@ export default {
 
 .annotation-panel {
   border-color: #bfe7d4;
+}
+
+.manual-toolbar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
+
+  button {
+    height: 34px;
+    border: 1px solid #d7e6df;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #36534a;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+
+    span {
+      font-size: 12px;
+    }
+
+    &.active,
+    &:hover {
+      border-color: #0f8f61;
+      background: #0f8f61;
+      color: #ffffff;
+    }
+  }
+}
+
+.manual-state {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 4px 8px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 9px 10px;
+  border: 1px solid #d8eee5;
+  border-radius: 8px;
+  background: #fbfffd;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    border-radius: 999px;
+    background: #e8f4ee;
+    color: #0f694a;
+    font-size: 12px;
+
+    &.active {
+      background: #0f8f61;
+      color: #ffffff;
+    }
+  }
+
+  strong {
+    color: #163c31;
+    font-size: 13px;
+  }
+
+  small {
+    grid-column: 2;
+    color: #6f837c;
+    font-size: 12px;
+  }
 }
 
 .active-label {
@@ -1913,6 +2799,42 @@ export default {
     color: #6b7f78;
     font-size: 12px;
     line-height: 1.5;
+  }
+}
+
+.layer-switches {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #f7faf9;
+}
+
+.manual-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+
+  div {
+    padding: 9px 10px;
+    border-radius: 8px;
+    background: #f0f9f5;
+  }
+
+  span {
+    display: block;
+    color: #70847d;
+    font-size: 12px;
+  }
+
+  strong {
+    display: block;
+    margin-top: 4px;
+    color: #075f42;
+    font-size: 13px;
   }
 }
 
@@ -2111,6 +3033,10 @@ export default {
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: repeat(3, minmax(220px, 1fr));
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 }
 

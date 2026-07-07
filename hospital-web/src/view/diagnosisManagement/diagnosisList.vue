@@ -15,6 +15,7 @@
         <el-form-item label="报告状态">
           <el-select v-model="searchForm.status" placeholder="请选择" clearable>
             <el-option label="待诊断" value="pending"></el-option>
+            <el-option label="待主治医生诊断" value="pending_attending"></el-option>
             <el-option label="草稿" value="draft"></el-option>
             <el-option label="已上传" value="submitted"></el-option>
           </el-select>
@@ -47,7 +48,7 @@
             <span>{{ scope.row.reportDate || scope.row.uploadTime || '-' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="100">
+        <el-table-column label="状态" width="140">
           <template slot-scope="scope">
             <el-tag :type="getStatusTag(scope.row.reportStatus)">
               {{ getStatusText(scope.row.reportStatus) }}
@@ -63,7 +64,7 @@
           <template slot-scope="scope">
             <el-button v-if="scope.row.reportStatus !== 'pending'" type="text" icon="el-icon-view" @click="handleView(scope.row)">查看</el-button>
             <el-button type="text" icon="el-icon-edit" @click="handleEdit(scope.row)">
-              {{ scope.row.reportStatus === 'pending' ? '填写报告' : '编辑' }}
+              {{ getActionText(scope.row.reportStatus) }}
             </el-button>
             <el-button type="text" icon="el-icon-picture-outline" @click="handleViewImaging(scope.row)">看片子</el-button>
           </template>
@@ -170,12 +171,17 @@ export default {
       this.handleSearch();
     },
     getStatusText(status) {
-      const map = { pending: '待诊断', draft: '草稿', submitted: '已上传' };
+      const map = { pending: '待诊断', pending_attending: '待主治医生诊断', draft: '草稿', submitted: '已上传' };
       return map[status] || '已上传';
     },
     getStatusTag(status) {
-      const map = { pending: 'warning', draft: 'info', submitted: 'success' };
+      const map = { pending: 'warning', pending_attending: 'warning', draft: 'info', submitted: 'success' };
       return map[status] || 'success';
+    },
+    getActionText(status) {
+      if (status === 'pending') return '填写报告';
+      if (status === 'pending_attending') return '填写诊断意见';
+      return '编辑';
     },
     getAnnotationText(row) {
       if (row.medsamResult) return row.radiologyStatus || '已标注';

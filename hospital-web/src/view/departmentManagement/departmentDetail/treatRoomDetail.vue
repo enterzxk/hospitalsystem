@@ -117,10 +117,11 @@
         // 获取表格数据
         getTreatRoomList: function() {
           this.tableAllData.tableData = [];
+          this.tableAllData.dataNull = false;
           let _this = this;
           getTreatRoom(this.outpatientId, this.pageList.pageNum, this.pageList.pageSize).then(res => {
             if (res.code === 200) {
-              const data = res.data.list;
+              const data = res.data.list || [];
               if (data.length > 0) {
                 data.forEach(function (item, index) {
                   _this.tableAllData.tableData.push({
@@ -133,6 +134,9 @@
                 this.tableAllData.dataNull = true
               } // end if
             } // end if
+          }).catch(() => {
+            this.tableAllData.dataNull = true;
+            tips('error', '获取诊室信息失败，请检查网络');
           })
         },
         // 点击了编辑操作

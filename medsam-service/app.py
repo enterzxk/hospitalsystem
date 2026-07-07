@@ -10,15 +10,23 @@ import numpy as np
 from PIL import Image
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import torch
-import cv2
+
+try:
+    import torch
+except ImportError:
+    torch = None
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 
 app = Flask(__name__)
 CORS(app)
 
 # 全局模型变量
 medsam_model = None
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cuda" if torch is not None and torch.cuda.is_available() else "cpu"
 
 
 def load_medsam_model():
@@ -32,6 +40,11 @@ def load_medsam_model():
         # medsam_model = sam_model_registry["vit_b"](checkpoint="medsam_vit_b.pth")
         # medsam_model.to(device)
         # medsam_model.eval()
+        medsam_model = {
+            "name": "MedSAM",
+            "mode": "demo-worker",
+            "device": device
+        }
         print("MedSAM model loaded successfully")
         return True
     except Exception as e:
@@ -270,8 +283,11 @@ def perform_segmentation(image, points, labels):
     for point, label in zip(points, labels):
         if label == 1:  # 前景点
             x, y = int(point[0]), int(point[1])
-            # 创建一个圆形区域
-            cv2.circle(mask, (x, y), 30, True, -1)
+            if cv2 is not None:
+                cv2.circle(mask, (x, y), 30, True, -1)
+            else:
+                yy, xx = np.ogrid[:h, :w]
+                mask |= (xx - x) ** 2 + (yy - y) ** 2 <= 30 ** 2
 
     return mask
 
@@ -300,10 +316,13 @@ def perform_segmentation_with_text(image, text):
 
     # 基于文本描述的简单分割
     # 实际应该使用CLIP等文本编码器
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) if len(image.shape) == 3 else image
-    _, mask = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+    if cv2 is not None:
+        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) if len(image.shape) == 3 else image
+        _, mask = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+        return mask.astype(bool)
 
-    return mask.astype(bool)
+    gray = image.mean(axis=2) if len(image.shape) == 3 else image
+    return gray > 127
 
 
 def auto_detect_region(image):
@@ -311,36 +330,47 @@ def auto_detect_region(image):
     自动检测感兴趣区域
     使用简单的图像处理技术
     """
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) if len(image.shape) == 3 else image
+    if cv2 is not None:
+        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) if len(image.shape) == 3 else image
 
-    # 使用OTSU阈值分割
-    _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # 使用OTSU阈值分割
+        _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    # 形态学操作
-    kernel = np.ones((5, 5), np.uint8)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        # 形态学操作
+        kernel = np.ones((5, 5), np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
-    return mask.astype(bool)
+        return mask.astype(bool)
+
+    gray = image.mean(axis=2) if len(image.shape) == 3 else image
+    return gray > gray.mean()
 
 
 def apply_mask_to_image(image, mask, color=[255, 0, 0], alpha=0.5):
     """将掩码应用到图像上"""
-    result = image.copy()
+    source = image
+    if len(source.shape) == 2:
+        source = np.stack([source] * 3, axis=-1)
+    result = source.copy()
 
     # 创建彩色掩码
-    mask_color = np.zeros_like(image)
+    mask_color = np.zeros_like(source)
     mask_color[mask] = color
 
     # 混合图像
-    result[mask] = cv2.addWeighted(image[mask], 1 - alpha, mask_color[mask], alpha, 0)
+    if cv2 is not None:
+        result[mask] = cv2.addWeighted(source[mask], 1 - alpha, mask_color[mask], alpha, 0)
+    else:
+        blended = source[mask].astype(np.float32) * (1 - alpha) + mask_color[mask].astype(np.float32) * alpha
+        result[mask] = np.clip(blended, 0, 255).astype(np.uint8)
 
     return result
 
 
-if __name__ == '__main__':
-    # 加载模型
-    load_medsam_model()
+load_medsam_model()
 
+
+if __name__ == '__main__':
     # 启动服务
     app.run(host='0.0.0.0', port=5000, debug=True)

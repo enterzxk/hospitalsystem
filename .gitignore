@@ -31,9 +31,17 @@ hospital-web/dist/
 # Backend
 hospital/target/
 
+# Playwright MCP
+.playwright-mcp/
+
+# Python cache
+__pycache__/
+*.pyc
+
 # Temporary files
 *.tmp
 *.bak
+.temp_docx/
 
 # Understanding Anything
 .understand-anything/

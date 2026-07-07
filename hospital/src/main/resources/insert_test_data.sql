@@ -1,49 +1,51 @@
+-- PostgreSQL script aligned with the medical imaging platform document.
+-- Structured data: PostgreSQL. Queue/cache: Redis. Binary assets: MinIO/NAS via URI columns.
+
 -- ============================================
 -- 测试数据插入脚本（兼容旧表结构 hospital_clinic）
 -- ============================================
-
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
-
 -- ============================================
--- 1. 角色（忽略已存在的）
+-- 1. 角色（已存在则忽略）
 -- ============================================
-INSERT IGNORE INTO `power_role` (`id`, `name`, `chinese_name`, `admin_count`, `sort`, `status`, `gmt_create`, `gmt_modified`) VALUES
+INSERT INTO power_role (id, name, chinese_name, admin_count, sort, status, gmt_create, gmt_modified) VALUES
 (1, 'admin', '管理员', 1, 1, 1, NOW(), NOW()),
 (2, 'doctor', '医生', 0, 2, 1, NOW(), NOW()),
 (3, 'radiologist', '放射科医生', 0, 3, 1, NOW(), NOW()),
-(4, 'patient', '患者', 0, 4, 1, NOW(), NOW());
+(4, 'patient', '患者', 0, 4, 1, NOW(), NOW())
+ON CONFLICT DO NOTHING;
 
 -- ============================================
--- 2. 账号（忽略已存在的）
+-- 2. 账号（已存在则忽略）
 -- ============================================
-INSERT IGNORE INTO `power_account` (`id`, `name`, `password`, `status`, `login_time`, `gmt_create`, `gmt_modified`) VALUES
+INSERT INTO power_account (id, name, password, status, login_time, gmt_create, gmt_modified) VALUES
 (10000001, 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 1, NOW(), NOW(), NOW()),
 (10000002, 'doctor1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 1, NOW(), NOW(), NOW()),
-(10000004, 'patient1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 1, NOW(), NOW(), NOW());
+(10000004, 'patient1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 1, NOW(), NOW(), NOW())
+ON CONFLICT DO NOTHING;
 
 -- ============================================
--- 3. 账号-角色关联（忽略已存在的）
+-- 3. 账号-角色关联（已存在则忽略）
 -- ============================================
-INSERT IGNORE INTO `power_account_role_relation` (`account_id`, `role_id`, `gmt_create`, `gmt_modified`) VALUES
+INSERT INTO power_account_role_relation (account_id, role_id, gmt_create, gmt_modified) VALUES
 (10000001, 1, NOW(), NOW()),
 (10000002, 2, NOW(), NOW()),
 (10000010, 3, NOW(), NOW()),
-(10000004, 4, NOW(), NOW());
+(10000004, 4, NOW(), NOW())
+ON CONFLICT DO NOTHING;
 
 -- ============================================
 -- 4. 医院信息
 -- ============================================
-DELETE FROM `hospital_info`;
-INSERT INTO `hospital_info` (`id`, `name`, `phone`, `address`, `description`, `picture`, `gmt_create`, `gmt_modified`) VALUES
+DELETE FROM hospital_info;
+INSERT INTO hospital_info (id, name, phone, address, description, picture, gmt_create, gmt_modified) VALUES
 (1000, '云岚宗医院', '0571-8808-6677', '云岚市青澜区云岚宗大道88号', '云岚宗医院是一所集医疗、教学、科研为一体的综合性医院', NULL, NOW(), NOW()),
 (1001, '云岚宗医院分院', '0571-8808-6678', '云岚市青澜区云岚宗大道100号', '云岚宗医院分院', NULL, NOW(), NOW());
 
 -- ============================================
 -- 5. 科室
 -- ============================================
-DELETE FROM `hospital_special`;
-INSERT INTO `hospital_special` (`id`, `name`, `description`, `gmt_create`, `gmt_modified`) VALUES
+DELETE FROM hospital_special;
+INSERT INTO hospital_special (id, name, description, gmt_create, gmt_modified) VALUES
 (10000, '内科学系', '内科疾病诊治', NOW(), NOW()),
 (10001, '心内科', '心血管疾病诊治', NOW(), NOW()),
 (10002, '消化内科', '消化系统疾病诊治', NOW(), NOW()),
@@ -60,8 +62,8 @@ INSERT INTO `hospital_special` (`id`, `name`, `description`, `gmt_create`, `gmt_
 -- ============================================
 -- 6. 门诊
 -- ============================================
-DELETE FROM `hospital_outpatient`;
-INSERT INTO `hospital_outpatient` (`id`, `name`, `special_id`, `gmt_create`, `gmt_modified`) VALUES
+DELETE FROM hospital_outpatient;
+INSERT INTO hospital_outpatient (id, name, special_id, gmt_create, gmt_modified) VALUES
 (10000, '普通内科门诊', 10000, NOW(), NOW()),
 (10001, '专家内科门诊', 10000, NOW(), NOW()),
 (10002, '心内科门诊', 10001, NOW(), NOW()),
@@ -79,8 +81,8 @@ INSERT INTO `hospital_outpatient` (`id`, `name`, `special_id`, `gmt_create`, `gm
 -- ============================================
 -- 7. 诊室（hospital_clinic 表）
 -- ============================================
-DELETE FROM `hospital_clinic`;
-INSERT INTO `hospital_clinic` (`id`, `outpatient_id`, `address`, `gmt_create`, `gmt_modified`) VALUES
+DELETE FROM hospital_clinic;
+INSERT INTO hospital_clinic (id, outpatient_id, address, gmt_create, gmt_modified) VALUES
 (10000, 10000, '1楼 101诊室', NOW(), NOW()),
 (10001, 10000, '1楼 102诊室', NOW(), NOW()),
 (10002, 10001, '2楼 201诊室', NOW(), NOW()),
@@ -99,8 +101,8 @@ INSERT INTO `hospital_clinic` (`id`, `outpatient_id`, `address`, `gmt_create`, `
 -- ============================================
 -- 8. 医生
 -- ============================================
-DELETE FROM `hospital_doctor`;
-INSERT INTO `hospital_doctor` (`id`, `name`, `gender`, `job_title`, `specialty`, `special_id`, `outpatient_id`, `gmt_create`, `gmt_modified`) VALUES
+DELETE FROM hospital_doctor;
+INSERT INTO hospital_doctor (id, name, gender, job_title, specialty, special_id, outpatient_id, gmt_create, gmt_modified) VALUES
 (10001, '张伟', 1, '主任医师', '擅长心血管疾病诊治，从事内科临床工作20年', 10000, 10000, NOW(), NOW()),
 (10002, '李芳', 2, '副主任医师', '擅长消化系统疾病诊治', 10002, 10003, NOW(), NOW()),
 (10003, '王强', 1, '主治医师', '擅长呼吸系统疾病诊治', 10003, 10004, NOW(), NOW()),
@@ -112,8 +114,8 @@ INSERT INTO `hospital_doctor` (`id`, `name`, `gender`, `job_title`, `specialty`,
 -- ============================================
 -- 9. 医院-门诊关联
 -- ============================================
-DELETE FROM `hospital_outpatient_relation`;
-INSERT INTO `hospital_outpatient_relation` (`hospital_id`, `outpatient_id`, `gmt_create`, `gmt_modified`) VALUES
+DELETE FROM hospital_outpatient_relation;
+INSERT INTO hospital_outpatient_relation (hospital_id, outpatient_id, gmt_create, gmt_modified) VALUES
 (1000, 10000, NOW(), NOW()),
 (1000, 10001, NOW(), NOW()),
 (1000, 10002, NOW(), NOW()),
@@ -134,8 +136,8 @@ INSERT INTO `hospital_outpatient_relation` (`hospital_id`, `outpatient_id`, `gmt
 -- ============================================
 -- 10. 医院-科室关联
 -- ============================================
-DELETE FROM `hospital_special_relation`;
-INSERT INTO `hospital_special_relation` (`hospital_id`, `special_id`, `gmt_create`, `gmt_modified`) VALUES
+DELETE FROM hospital_special_relation;
+INSERT INTO hospital_special_relation (hospital_id, special_id, gmt_create, gmt_modified) VALUES
 (1000, 10000, NOW(), NOW()),
 (1000, 10001, NOW(), NOW()),
 (1000, 10002, NOW(), NOW()),
@@ -152,4 +154,25 @@ INSERT INTO `hospital_special_relation` (`hospital_id`, `special_id`, `gmt_creat
 (1001, 10005, NOW(), NOW()),
 (1001, 10006, NOW(), NOW());
 
-SET FOREIGN_KEY_CHECKS = 1;
+-- ============================================
+-- 11. 出诊排班
+-- ============================================
+DELETE FROM visit_plan;
+INSERT INTO visit_plan (id, hospital_id, special_id, outpatient_id, clinic_id, doctor_id, time, day, gmt_create, gmt_modified) VALUES
+(10000, 1000, 10000, 10000, 10000, 10001, 1, CURRENT_DATE, NOW(), NOW()),
+(10001, 1000, 10000, 10000, 10001, 10001, 2, CURRENT_DATE, NOW(), NOW()),
+(10002, 1000, 10002, 10003, 10004, 10002, 1, CURRENT_DATE, NOW(), NOW()),
+(10003, 1000, 10003, 10004, 10005, 10003, 2, CURRENT_DATE, NOW(), NOW()),
+(10004, 1000, 10005, 10006, 10007, 10005, 1, CURRENT_DATE, NOW(), NOW());
+
+-- ============================================
+-- 12. 显式 ID 后同步序列，避免新增数据主键冲突
+-- ============================================
+SELECT setval(pg_get_serial_sequence('power_role', 'id'), COALESCE((SELECT MAX(id) FROM power_role), 1), true);
+SELECT setval(pg_get_serial_sequence('power_account', 'id'), COALESCE((SELECT MAX(id) FROM power_account), 1), true);
+SELECT setval(pg_get_serial_sequence('hospital_info', 'id'), COALESCE((SELECT MAX(id) FROM hospital_info), 1), true);
+SELECT setval(pg_get_serial_sequence('hospital_special', 'id'), COALESCE((SELECT MAX(id) FROM hospital_special), 1), true);
+SELECT setval(pg_get_serial_sequence('hospital_outpatient', 'id'), COALESCE((SELECT MAX(id) FROM hospital_outpatient), 1), true);
+SELECT setval(pg_get_serial_sequence('hospital_clinic', 'id'), COALESCE((SELECT MAX(id) FROM hospital_clinic), 1), true);
+SELECT setval(pg_get_serial_sequence('hospital_doctor', 'id'), COALESCE((SELECT MAX(id) FROM hospital_doctor), 1), true);
+SELECT setval(pg_get_serial_sequence('visit_plan', 'id'), COALESCE((SELECT MAX(id) FROM visit_plan), 1), true);

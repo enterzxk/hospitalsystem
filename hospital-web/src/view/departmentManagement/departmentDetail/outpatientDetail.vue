@@ -238,6 +238,7 @@
         // 获取该专科编号的门诊信息
         getOutpatientListById: function (ID) {
           this.tableAllData.tableData = [];
+          this.tableAllData.dataNull = false;
           let _this = this;
           getOutpatientListById(this.pageList.pageNum, this.pageList.pageSize, ID).then(res => {
             if (res.code === 200) {
@@ -260,6 +261,7 @@
               }
             }
           }).catch(() => {
+            this.tableAllData.dataNull = true;
             tips('error', '获取门诊信息失败，请检查网络');
           })
         },

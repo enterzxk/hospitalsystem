@@ -5,7 +5,6 @@ import cn.yujian95.hospital.entity.LogOperation;
 import cn.yujian95.hospital.entity.LogOperationExample;
 import cn.yujian95.hospital.mapper.LogOperationMapper;
 import cn.yujian95.hospital.service.ILogOperationService;
-import com.github.pagehelper.PageHelper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -62,21 +61,18 @@ public class LogOperationServiceImpl implements ILogOperationService {
      */
     @Override
     public List<LogOperation> search(String accountName, String method, Integer pageNum, Integer pageSize) {
+        int safePageNum = pageNum == null || pageNum <= 0 ? 1 : pageNum;
+        int safePageSize = pageSize == null || pageSize <= 0 ? 20 : pageSize;
+        int offset = (safePageNum - 1) * safePageSize;
+        return operationMapper.selectAuditLogs(normalize(accountName), normalize(method), safePageSize, offset);
+    }
 
-        PageHelper.startPage(pageNum, pageSize);
+    @Override
+    public long count(String accountName, String method) {
+        return operationMapper.countAuditLogs(normalize(accountName), normalize(method));
+    }
 
-        LogOperationExample example = new LogOperationExample();
-
-        LogOperationExample.Criteria criteria = example.createCriteria();
-
-        if (!StringUtils.isEmpty(accountName)) {
-            criteria.andAccountNameEqualTo(accountName);
-        }
-
-        if (!StringUtils.isEmpty(method)) {
-            criteria.andMethodEqualTo(method);
-        }
-
-        return operationMapper.selectByExampleWithBLOBs(example);
+    private String normalize(String value) {
+        return StringUtils.isEmpty(value) ? null : value.trim();
     }
 }

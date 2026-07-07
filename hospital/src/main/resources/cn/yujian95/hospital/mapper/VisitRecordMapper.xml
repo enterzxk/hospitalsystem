@@ -12,7 +12,7 @@
     <result column="symptoms" jdbcType="VARCHAR" property="symptoms" />
     <result column="diagnosis" jdbcType="VARCHAR" property="diagnosis" />
     <result column="treatment_plan" jdbcType="VARCHAR" property="treatmentPlan" />
-    <result column="prescription" jdbcType="LONGVARCHAR" property="prescription" />
+    <result column="prescription" jdbcType="VARCHAR" property="prescription" />
     <result column="visit_status" jdbcType="INTEGER" property="visitStatus" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
@@ -114,7 +114,7 @@
       prescription, visit_status, gmt_create, gmt_modified)
     values (#{patientId,jdbcType=BIGINT}, #{doctorId,jdbcType=BIGINT}, #{hospitalId,jdbcType=BIGINT}, #{specialId,jdbcType=BIGINT}, #{outpatientId,jdbcType=BIGINT},
       #{visitDate,jdbcType=TIMESTAMP}, #{symptoms,jdbcType=VARCHAR}, #{diagnosis,jdbcType=VARCHAR}, #{treatmentPlan,jdbcType=VARCHAR},
-      #{prescription,jdbcType=LONGVARCHAR}, #{visitStatus,jdbcType=INTEGER}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
+      #{prescription,jdbcType=VARCHAR}, #{visitStatus,jdbcType=INTEGER}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="cn.yujian95.hospital.entity.VisitRecord" useGeneratedKeys="true" keyProperty="id">
     insert into visit_record
@@ -188,7 +188,7 @@
         #{treatmentPlan,jdbcType=VARCHAR},
       </if>
       <if test="prescription != null">
-        #{prescription,jdbcType=LONGVARCHAR},
+        #{prescription,jdbcType=VARCHAR},
       </if>
       <if test="visitStatus != null">
         #{visitStatus,jdbcType=INTEGER},
@@ -249,7 +249,7 @@
         symptoms = #{record.symptoms,jdbcType=VARCHAR},
         diagnosis = #{record.diagnosis,jdbcType=VARCHAR},
         treatment_plan = #{record.treatmentPlan,jdbcType=VARCHAR},
-        prescription = #{record.prescription,jdbcType=LONGVARCHAR},
+        prescription = #{record.prescription,jdbcType=VARCHAR},
         visit_status = #{record.visitStatus,jdbcType=INTEGER},
         gmt_create = #{record.gmtCreate,jdbcType=TIMESTAMP},
         gmt_modified = #{record.gmtModified,jdbcType=TIMESTAMP}
@@ -288,7 +288,7 @@
         treatment_plan = #{treatmentPlan,jdbcType=VARCHAR},
       </if>
       <if test="prescription != null">
-        prescription = #{prescription,jdbcType=LONGVARCHAR},
+        prescription = #{prescription,jdbcType=VARCHAR},
       </if>
       <if test="visitStatus != null">
         visit_status = #{visitStatus,jdbcType=INTEGER},
@@ -313,7 +313,7 @@
         symptoms = #{symptoms,jdbcType=VARCHAR},
         diagnosis = #{diagnosis,jdbcType=VARCHAR},
         treatment_plan = #{treatmentPlan,jdbcType=VARCHAR},
-        prescription = #{prescription,jdbcType=LONGVARCHAR},
+        prescription = #{prescription,jdbcType=VARCHAR},
         visit_status = #{visitStatus,jdbcType=INTEGER},
         gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
         gmt_modified = #{gmtModified,jdbcType=TIMESTAMP}

@@ -117,10 +117,10 @@
           }
         }
         if (isValidate) {
-          this.uploadPicture() // 上传到七牛云
+          this.uploadPicture() // 上传到对象存储
         }
       },
-      // 上传照片到七牛云
+      // 上传照片到对象存储
       uploadPicture: function() {
         this.fullscreenLoading = true;
         const url = 'http://localhost:8080/hospital/picture/upload';

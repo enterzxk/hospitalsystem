@@ -20,6 +20,14 @@ public interface LogOperationMapper {
 
     List<LogOperation> selectByExample(LogOperationExample example);
 
+    List<LogOperation> selectAuditLogs(@Param("accountName") String accountName,
+                                       @Param("method") String method,
+                                       @Param("limit") Integer limit,
+                                       @Param("offset") Integer offset);
+
+    long countAuditLogs(@Param("accountName") String accountName,
+                        @Param("method") String method);
+
     LogOperation selectByPrimaryKey(Long id);
 
     int updateByExampleSelective(@Param("record") LogOperation record, @Param("example") LogOperationExample example);

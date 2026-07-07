@@ -1,27 +1,34 @@
+-- PostgreSQL script aligned with the medical imaging platform document.
+-- Structured data: PostgreSQL. Queue/cache: Redis. Binary assets: MinIO/NAS via URI columns.
+
 -- 修复 log_account_login 表结构
-DROP TABLE IF EXISTS `log_account_login`;
-CREATE TABLE `log_account_login`
+DROP TABLE IF EXISTS log_account_login CASCADE;
+CREATE TABLE log_account_login
 (
-    `id`           bigint(20) NOT NULL AUTO_INCREMENT COMMENT '日志编号',
-    `account_id`   bigint(20) NULL DEFAULT NULL COMMENT '账号编号',
-    `account_name` varchar(64) NOT NULL COMMENT '登录账号',
-    `ip_address`   varchar(64) NULL DEFAULT NULL COMMENT '登录IP',
-    `gmt_create`   datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
-    `gmt_modified` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '更新时间',
-    PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '登录日志表' ROW_FORMAT = Dynamic;
+    id           bigserial NOT NULL,
+    account_id   bigint NULL DEFAULT NULL,
+    account_name varchar(64) NOT NULL,
+    ip_address   varchar(64) NULL DEFAULT NULL,
+    gmt_create   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    gmt_modified timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+);
 
 -- 修复 log_operation 表结构
-DROP TABLE IF EXISTS `log_operation`;
-CREATE TABLE `log_operation`
+DROP TABLE IF EXISTS log_operation CASCADE;
+CREATE TABLE log_operation
 (
-    `id`           bigint(20) NOT NULL AUTO_INCREMENT COMMENT '日志编号',
-    `account_id`   bigint(20) NULL DEFAULT NULL COMMENT '账号编号',
-    `account_name` varchar(64) NULL DEFAULT NULL COMMENT '操作账号',
-    `operation`    varchar(64) NOT NULL COMMENT '操作名称',
-    `description`  varchar(255) NULL DEFAULT NULL COMMENT '操作描述',
-    `ip_address`   varchar(64) NULL DEFAULT NULL COMMENT '操作IP',
-    `gmt_create`   datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
-    `gmt_modified` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '更新时间',
-    PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '操作日志表' ROW_FORMAT = Dynamic;
+    id           bigserial NOT NULL,
+    account_id   bigint NULL DEFAULT NULL,
+    account_name varchar(64) NULL DEFAULT NULL,
+    operation    varchar(64) NOT NULL,
+    description  varchar(255) NULL DEFAULT NULL,
+    ip_address   varchar(64) NULL DEFAULT NULL,
+    gmt_create   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    gmt_modified timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+);
+
+-- PostgreSQL sequence synchronization
+SELECT setval(pg_get_serial_sequence('log_account_login', 'id'), COALESCE((SELECT MAX(id) FROM log_account_login), 1));
+SELECT setval(pg_get_serial_sequence('log_operation', 'id'), COALESCE((SELECT MAX(id) FROM log_operation), 1));
