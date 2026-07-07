@@ -43,6 +43,7 @@
           return {
             searchDepartment: '',
             tableAllData: {
+              dataNull: false,
               tableTitle: [{
                 prop: 'ID',
                 label: '编号',
@@ -201,10 +202,12 @@
         // 从数据库获取专科信息列表
         getDepartmentList: function () {
           this.tableAllData.tableData = [];
+          this.tableAllData.dataNull = false;
           let _this = this;
           getDepartmentList(this.pageList.pageNum, this.pageList.pageSize, this.searchDepartment).then(res => {
             if (res.code === 200){
               if (res.data.list.length > 0) {
+                this.tableAllData.dataNull = false;
                 this.pageList = {
                   pageNum: res.data.pageNum,
                   pageSize: res.data.pageSize,
@@ -222,6 +225,7 @@
               }
             }
           }).catch(() => {
+            this.tableAllData.dataNull = true;
             tips('error', '获取信息失败，请检查网络');
           })
         },

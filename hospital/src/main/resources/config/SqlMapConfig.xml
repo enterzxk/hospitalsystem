@@ -6,8 +6,8 @@
     <!-- 配置分页插件 -->
     <plugins>
         <plugin interceptor="com.github.pagehelper.PageHelper">
-            <!-- 设置数据库类型 Oracle,Mysql,MariaDB,SQLite,Hsqldb,PostgreSQL六种数据库-->
-            <property name="dialect" value="mysql"/>
+            <!-- 严格按医学影像平台文档使用 PostgreSQL -->
+            <property name="dialect" value="postgresql"/>
         </plugin>
     </plugins>
 </configuration>

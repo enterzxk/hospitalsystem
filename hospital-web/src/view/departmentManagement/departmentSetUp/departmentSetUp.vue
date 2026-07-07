@@ -126,13 +126,19 @@
           },
         // 获取所有医院的信息
         getAllHospital: function() {
+          this.hospitalData = [];
+          this.tableAllData.tableData = [];
+          this.tableAllData.dataNull = false;
           getHospitalInfo(this.pageList.pageNum, this.pageList.pageSize, this.searchHospital).then(res => {
             if (res.code === 200 && res.data.list.length >0 ){
               this.hospitalData = res.data.list;
               this.selectHospitalID = res.data.list[0].id;
               this.getDoctorDepartmentList();
+            } else {
+              this.tableAllData.dataNull = true;
             }
           }).catch(() => {
+            this.tableAllData.dataNull = true;
             tips('error', '获取医院信息失败');
           })
         },
@@ -149,18 +155,20 @@
         // 获取医院的专科列表
         getDoctorDepartmentList: function() {
           this.tableAllData.tableData = [];
+          this.tableAllData.dataNull = false;
           let _this = this;
           getDoctorDepartmentList(this.selectHospitalID, this.pageList.pageNum, this.pageList.pageSize)
             .then(res => {
               console.log(res)
               if (res.code === 200) {
-                if (res.data.list !== null) {
+                const data = res.data.list || [];
+                if (data.length > 0) {
                   this.pageList = {
                     pageNum: res.data.pageNum,
                     pageSize: res.data.pageSize,
                     total: res.data.total
                   };
-                  res.data.list.forEach(function (item, index) {
+                  data.forEach(function (item, index) {
                     _this.tableAllData.tableData.push({
                       ID: item.id,
                       name: item.name,
@@ -174,6 +182,7 @@
                 }
               }
             }).catch(() => {
+              this.tableAllData.dataNull = true;
               tips('error', '获取专科列表失败')
           })
         },
@@ -199,8 +208,6 @@
             }).catch(() => {
               tips('error', '删除失败')
             });
-            console.log(scope.scopeIndex)
-            this.$refs.tableList.deleteData(scope.scopeIndex)
         },
           // 将在列表的专科和可添加的专科进行对比
         compareDepartment: function () {
@@ -246,7 +253,7 @@
         fatherMethod: function (pageNum, pageSize) {
           this.pageList.pageNum = pageNum;
           this.pageList.pageSize = pageSize;
-          this.getOutpatientListById(this.selectID)
+          this.getDoctorDepartmentList()
         }
       },
       mounted() {

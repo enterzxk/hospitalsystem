@@ -16,8 +16,8 @@
     <result column="examination_type" jdbcType="VARCHAR" property="examinationType" />
     <result column="body_part" jdbcType="VARCHAR" property="bodyPart" />
     <result column="clinical_diagnosis" jdbcType="VARCHAR" property="clinicalDiagnosis" />
-    <result column="examination_findings" jdbcType="LONGVARCHAR" property="examinationFindings" />
-    <result column="diagnostic_opinion" jdbcType="LONGVARCHAR" property="diagnosticOpinion" />
+    <result column="examination_findings" jdbcType="VARCHAR" property="examinationFindings" />
+    <result column="diagnostic_opinion" jdbcType="VARCHAR" property="diagnosticOpinion" />
     <result column="report_status" jdbcType="INTEGER" property="reportStatus" />
     <result column="report_date" jdbcType="TIMESTAMP" property="reportDate" />
     <result column="reviewer_id" jdbcType="BIGINT" property="reviewerId" />
@@ -127,7 +127,7 @@
     values (#{patientId,jdbcType=BIGINT}, #{doctorId,jdbcType=BIGINT}, #{hospitalId,jdbcType=BIGINT}, #{specialId,jdbcType=BIGINT}, #{reportNo,jdbcType=VARCHAR},
       #{patientName,jdbcType=VARCHAR}, #{gender,jdbcType=INTEGER}, #{age,jdbcType=INTEGER}, #{idCard,jdbcType=VARCHAR},
       #{phone,jdbcType=VARCHAR}, #{examinationType,jdbcType=VARCHAR}, #{bodyPart,jdbcType=VARCHAR}, #{clinicalDiagnosis,jdbcType=VARCHAR},
-      #{examinationFindings,jdbcType=LONGVARCHAR}, #{diagnosticOpinion,jdbcType=LONGVARCHAR}, #{reportStatus,jdbcType=INTEGER},
+      #{examinationFindings,jdbcType=VARCHAR}, #{diagnosticOpinion,jdbcType=VARCHAR}, #{reportStatus,jdbcType=INTEGER},
       #{reportDate,jdbcType=TIMESTAMP}, #{reviewerId,jdbcType=BIGINT}, #{reviewTime,jdbcType=TIMESTAMP}, #{reviewOpinion,jdbcType=VARCHAR},
       #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP})
   </insert>
@@ -242,10 +242,10 @@
         #{clinicalDiagnosis,jdbcType=VARCHAR},
       </if>
       <if test="examinationFindings != null">
-        #{examinationFindings,jdbcType=LONGVARCHAR},
+        #{examinationFindings,jdbcType=VARCHAR},
       </if>
       <if test="diagnosticOpinion != null">
-        #{diagnosticOpinion,jdbcType=LONGVARCHAR},
+        #{diagnosticOpinion,jdbcType=VARCHAR},
       </if>
       <if test="reportStatus != null">
         #{reportStatus,jdbcType=INTEGER},
@@ -322,8 +322,8 @@
         examination_type = #{record.examinationType,jdbcType=VARCHAR},
         body_part = #{record.bodyPart,jdbcType=VARCHAR},
         clinical_diagnosis = #{record.clinicalDiagnosis,jdbcType=VARCHAR},
-        examination_findings = #{record.examinationFindings,jdbcType=LONGVARCHAR},
-        diagnostic_opinion = #{record.diagnosticOpinion,jdbcType=LONGVARCHAR},
+        examination_findings = #{record.examinationFindings,jdbcType=VARCHAR},
+        diagnostic_opinion = #{record.diagnosticOpinion,jdbcType=VARCHAR},
         report_status = #{record.reportStatus,jdbcType=INTEGER},
         report_date = #{record.reportDate,jdbcType=TIMESTAMP},
         reviewer_id = #{record.reviewerId,jdbcType=BIGINT},
@@ -378,10 +378,10 @@
         clinical_diagnosis = #{clinicalDiagnosis,jdbcType=VARCHAR},
       </if>
       <if test="examinationFindings != null">
-        examination_findings = #{examinationFindings,jdbcType=LONGVARCHAR},
+        examination_findings = #{examinationFindings,jdbcType=VARCHAR},
       </if>
       <if test="diagnosticOpinion != null">
-        diagnostic_opinion = #{diagnosticOpinion,jdbcType=LONGVARCHAR},
+        diagnostic_opinion = #{diagnosticOpinion,jdbcType=VARCHAR},
       </if>
       <if test="reportStatus != null">
         report_status = #{reportStatus,jdbcType=INTEGER},
@@ -422,8 +422,8 @@
         examination_type = #{examinationType,jdbcType=VARCHAR},
         body_part = #{bodyPart,jdbcType=VARCHAR},
         clinical_diagnosis = #{clinicalDiagnosis,jdbcType=VARCHAR},
-        examination_findings = #{examinationFindings,jdbcType=LONGVARCHAR},
-        diagnostic_opinion = #{diagnosticOpinion,jdbcType=LONGVARCHAR},
+        examination_findings = #{examinationFindings,jdbcType=VARCHAR},
+        diagnostic_opinion = #{diagnosticOpinion,jdbcType=VARCHAR},
         report_status = #{reportStatus,jdbcType=INTEGER},
         report_date = #{reportDate,jdbcType=TIMESTAMP},
         reviewer_id = #{reviewerId,jdbcType=BIGINT},

@@ -60,6 +60,23 @@ public class CommonPage<T> implements Serializable {
         return result;
     }
 
+    /**
+     * 直接根据数据库 limit/offset 查询结果构造分页对象。
+     */
+    public static <T> CommonPage<T> restPage(List<T> list, Integer pageNum, Integer pageSize, Long total) {
+        CommonPage<T> result = new CommonPage<T>();
+        long safeTotal = total == null ? 0L : total;
+        int safePageSize = pageSize == null || pageSize <= 0 ? 20 : pageSize;
+
+        result.setPageNum(pageNum == null || pageNum <= 0 ? 1 : pageNum);
+        result.setPageSize(safePageSize);
+        result.setTotal(safeTotal);
+        result.setTotalPage((int) Math.ceil((double) safeTotal / safePageSize));
+        result.setList(list);
+
+        return result;
+    }
+
     public Integer getPageNum() {
         return pageNum;
     }

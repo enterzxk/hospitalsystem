@@ -30,4 +30,13 @@ public interface ILogOperationService {
      * @return 操作记录表
      */
     List<LogOperation> search(String accountName, String method, Integer pageNum, Integer pageSize);
+
+    /**
+     * 统计操作记录。
+     *
+     * @param accountName 用户名称
+     * @param method      请求方法
+     * @return 总数
+     */
+    long count(String accountName, String method);
 }

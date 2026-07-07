@@ -3,7 +3,7 @@
 <mapper namespace="cn.yujian95.hospital.mapper.dao.PowerRoleDao">
 
     <select id="listMenu" resultType="cn.yujian95.hospital.entity.PowerMenu">
-        SELECT
+        SELECT DISTINCT
             m.id id,
             m.parent_id parentId,
             m.gmt_create gmtCreate,
@@ -22,11 +22,9 @@
         WHERE
             arr.account_id = #{id}
           AND m.id IS NOT NULL
-        GROUP BY
-            m.id
     </select>
     <select id="listMenuByRoleId" resultType="cn.yujian95.hospital.entity.PowerMenu">
-        SELECT
+        SELECT DISTINCT
             m.id id,
             m.parent_id parentId,
             m.gmt_create gmtCreate,
@@ -43,15 +41,13 @@
         WHERE
             rmr.role_id = #{roleId}
           AND m.id IS NOT NULL
-        GROUP BY
-            m.id
     </select>
     <select id="listResourceByRoleId" resultType="cn.yujian95.hospital.entity.PowerResource">
-        SELECT
+        SELECT DISTINCT
             r.id id,
             r.gmt_create gmtCreate,
             r.gmt_modified gmtmodified,
-            r.`name` `name`,
+            r.name name,
             r.url url,
             r.description description,
             r.category_id categoryId
@@ -61,7 +57,5 @@
         WHERE
             rrr.role_id = #{roleId}
           AND r.id IS NOT NULL
-        GROUP BY
-            r.id
     </select>
 </mapper>

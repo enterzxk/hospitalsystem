@@ -1,0 +1,66 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: hospital-medical-postgres
+    environment:
+      POSTGRES_DB: hospital_imaging
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./hospital/src/main/resources/rebuild_database_final.sql:/docker-entrypoint-initdb.d/01-rebuild_database_final.sql:ro
+      - ./hospital/src/main/resources/insert_test_data.sql:/docker-entrypoint-initdb.d/02-insert_test_data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hospital_imaging"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: hospital-medical-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: hospital-medical-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  medsam-service:
+    build:
+      context: ./medsam-service
+    container_name: hospital-medsam-service
+    environment:
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import json, urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=3)); raise SystemExit(0 if data.get('status') == 'healthy' else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
+  minio-data:

@@ -183,6 +183,7 @@
         // 从数据库获取医生信息列表
         getDoctorList: function () {
           this.tableAllData.tableData = [];
+          this.tableAllData.dataNull = false;
           let _this = this;
           getDoctorList(
             this.selectDepartmentID,
@@ -208,32 +209,46 @@
                 this.tableAllData.dataNull = true
               }
             }
+          }).catch(() => {
+            this.tableAllData.dataNull = true;
+            tips('error', '获取医生信息失败，请检查网络');
           })
         },
         // 获取数据库中的专科信息
         getDepartmentList: function() {
           // 获取全部专科信息
+          this.selectDepartmentData = [];
+          this.tableAllData.dataNull = false;
           getDepartmentList(1, 50, '').then(res => {
             if (res.code === 200 && res.data.list.length >0 ){
               this.selectDepartmentData = res.data.list;
               this.selectDepartmentID = this.selectDepartmentData[0].id;
               this.getOutpatientByDepartmentID();
               sessionStorage.setItem('departmentList', JSON.stringify(this.selectDepartmentData))
+            } else {
+              this.tableAllData.dataNull = true;
             }
           }).catch(() => {
+            this.tableAllData.dataNull = true;
             tips('error', '获取专科信息失败');
           })
         },
         // 获取专科的门诊信息
         getOutpatientByDepartmentID: function () {
+          this.selectOutpatientData = [];
+          this.tableAllData.dataNull = false;
           getOutpatientListById(1, 50, this.selectDepartmentID).then(res => {
             if (res.code === 200 && res.data.list.length > 0) {
               this.selectOutpatientData = res.data.list;
               this.selectOutpatientID = this.selectOutpatientData[0].id;
               this.getDoctorList();
               sessionStorage.setItem('outpatientList', JSON.stringify(this.selectOutpatientData))
+            } else {
+              this.selectOutpatientID = 0;
+              this.tableAllData.dataNull = true;
             }
           }).catch(() => {
+            this.tableAllData.dataNull = true;
             tips('error', '获取门诊信息失败，请检查网络');
           })
         },

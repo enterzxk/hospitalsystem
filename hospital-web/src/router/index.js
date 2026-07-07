@@ -194,6 +194,31 @@ export const radiologistRouterMap = [
       meta: {title: '影像查看器', icon: 'el-icon-view'},
       hidden: true
     }]
+  }, {
+    path: '/diagnosisManagement',
+    component: layout,
+    redirect: '/diagnosisReports',
+    meta: {title: '诊断管理', icon: 'el-icon-document-checked'},
+    children: [{
+      path: '/diagnosisReports',
+      component: () => import('@/view/diagnosisManagement/diagnosisReports'),
+      meta: {title: '诊断报告', icon: 'el-icon-document'}
+    }, {
+      path: '/diagnosisList',
+      component: () => import('@/view/diagnosisManagement/diagnosisList'),
+      meta: {title: '诊断列表', icon: 'el-icon-document-checked'},
+      hidden: true
+    }, {
+      path: '/diagnosisWrite',
+      component: () => import('@/view/diagnosisManagement/diagnosisWrite'),
+      meta: {title: '填写诊断', icon: 'el-icon-edit'},
+      hidden: true
+    }, {
+      path: '/diagnosisDetail',
+      component: () => import('@/view/diagnosisManagement/diagnosisDetail'),
+      meta: {title: '诊断详情', icon: 'el-icon-view'},
+      hidden: true
+    }]
   },
   {path: '*', redirect: '/404', hidden: true}
 ];
@@ -343,6 +368,24 @@ export const systemRouterMap = [
       component: () => import('@/view/diagnosisManagement/diagnosisReports'),
       meta: {title: '诊断报告', icon: 'el-icon-document'},
       hidden: true
+    }]
+  }, {
+    path: '/aiManagement',
+    component: layout,
+    redirect: '/modelManagement',
+    meta: {title: 'AI 平台管理', icon: 'el-icon-cpu'},
+    children: [{
+      path: '/modelManagement',
+      component: () => import('@/view/aiManagement/modelManagement'),
+      meta: {title: '模型管理', icon: 'el-icon-cpu'}
+    }, {
+      path: '/opsMonitor',
+      component: () => import('@/view/aiManagement/opsMonitor'),
+      meta: {title: '运维监控', icon: 'el-icon-data-analysis'}
+    }, {
+      path: '/auditLogs',
+      component: () => import('@/view/aiManagement/opsMonitor'),
+      meta: {title: '审计日志', icon: 'el-icon-document-checked'}
     }]
   }, {
     path: '/setUpManagement',

@@ -207,10 +207,8 @@
     },
     computed: {
       loading: function () {
-        if (this.tableAllData.tableData.length !== 0 || this.tableAllData.dataNull) {
-          return false
-        }
-        return true
+        const tableState = this.tableAllData || {};
+        return tableState.loading === true
       }
     }
   }

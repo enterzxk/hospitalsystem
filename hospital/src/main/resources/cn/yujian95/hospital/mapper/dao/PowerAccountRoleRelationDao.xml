@@ -17,10 +17,11 @@
     </select>
 
     <select id="getResourceList" resultType="cn.yujian95.hospital.entity.PowerResource">
-        SELECT ur.id           id,
+        SELECT DISTINCT
+               ur.id           id,
                ur.gmt_modified gmtModified,
                ur.gmt_create   gmtCreate,
-               ur.`name`       `name`,
+               ur.name         name,
                ur.url          url,
                ur.description  description,
                ur.category_id  categoryId
@@ -30,6 +31,5 @@
                  LEFT JOIN power_resource ur ON ur.id = rrr.resource_id
         WHERE ar.account_id = #{accountId}
           AND ur.id IS NOT NULL
-        GROUP BY ur.id
     </select>
 </mapper>

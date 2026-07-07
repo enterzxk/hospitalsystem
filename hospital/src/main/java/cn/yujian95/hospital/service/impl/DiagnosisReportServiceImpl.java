@@ -12,6 +12,7 @@ import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,6 +42,9 @@ public class DiagnosisReportServiceImpl implements IDiagnosisReportService {
         report.setGmtCreate(new Date());
         report.setGmtModified(new Date());
         report.setReportStatus(0); // 草稿状态
+        if (StringUtils.isEmpty(report.getDiagnosticOpinion())) {
+            report.setDiagnosticOpinion("");
+        }
         return diagnosisReportMapper.insertSelective(report) > 0;
     }
 

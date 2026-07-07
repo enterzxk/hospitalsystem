@@ -26,6 +26,7 @@ export default {
           return {
             searchHospital: '',
             tableAllData: {
+              dataNull: false,
               tableTitle: [{
                 prop: 'hospitalID',
                 label: '医院ID',
@@ -119,9 +120,11 @@ export default {
         getHospitalInfo: function () {
           let _this = this;
           _this.tableAllData.tableData = [];
+          _this.tableAllData.dataNull = false;
           getHospitalInfo(this.pageList.pageNum, this.pageList.pageSize, this.searchHospital).then(res => {
             if (res.code === 200){
               if (res.data.list.length > 0) {
+                this.tableAllData.dataNull = false;
                 this.pageList = {
                   pageNum: res.data.pageNum,
                   pageSize: res.data.pageSize,
@@ -142,6 +145,7 @@ export default {
               }
             }
           }).catch(() => {
+            this.tableAllData.dataNull = true;
             tips('error', '获取医院信息失败');
           })
         },

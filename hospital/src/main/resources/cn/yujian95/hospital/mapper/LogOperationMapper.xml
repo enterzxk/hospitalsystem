@@ -17,7 +17,7 @@
     <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified" />
   </resultMap>
   <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="cn.yujian95.hospital.entity.LogOperation">
-    <result column="result" jdbcType="LONGVARCHAR" property="result" />
+    <result column="result" jdbcType="VARCHAR" property="result" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -114,6 +114,34 @@
       order by ${orderByClause}
     </if>
   </select>
+  <select id="selectAuditLogs" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from log_operation
+    <where>
+      <if test="accountName != null and accountName != ''">
+        and account_name like concat('%', #{accountName,jdbcType=VARCHAR}, '%')
+      </if>
+      <if test="method != null and method != ''">
+        and method = #{method,jdbcType=VARCHAR}
+      </if>
+    </where>
+    order by gmt_create desc, id desc
+    limit #{limit,jdbcType=INTEGER} offset #{offset,jdbcType=INTEGER}
+  </select>
+  <select id="countAuditLogs" resultType="java.lang.Long">
+    select count(*) from log_operation
+    <where>
+      <if test="accountName != null and accountName != ''">
+        and account_name like concat('%', #{accountName,jdbcType=VARCHAR}, '%')
+      </if>
+      <if test="method != null and method != ''">
+        and method = #{method,jdbcType=VARCHAR}
+      </if>
+    </where>
+  </select>
   <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="ResultMapWithBLOBs">
     select 
     <include refid="Base_Column_List" />
@@ -142,7 +170,7 @@
       #{spendTime,jdbcType=INTEGER}, #{description,jdbcType=VARCHAR}, #{basePath,jdbcType=VARCHAR}, 
       #{uri,jdbcType=VARCHAR}, #{url,jdbcType=VARCHAR}, #{method,jdbcType=VARCHAR}, #{ipAddress,jdbcType=VARCHAR}, 
       #{parameter,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP}, 
-      #{result,jdbcType=LONGVARCHAR})
+      #{result,jdbcType=VARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="cn.yujian95.hospital.entity.LogOperation">
     insert into log_operation
@@ -231,7 +259,7 @@
         #{gmtModified,jdbcType=TIMESTAMP},
       </if>
       <if test="result != null">
-        #{result,jdbcType=LONGVARCHAR},
+        #{result,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -284,7 +312,7 @@
         gmt_modified = #{record.gmtModified,jdbcType=TIMESTAMP},
       </if>
       <if test="record.result != null">
-        result = #{record.result,jdbcType=LONGVARCHAR},
+        result = #{record.result,jdbcType=VARCHAR},
       </if>
     </set>
     <if test="_parameter != null">
@@ -306,7 +334,7 @@
       parameter = #{record.parameter,jdbcType=VARCHAR},
       gmt_create = #{record.gmtCreate,jdbcType=TIMESTAMP},
       gmt_modified = #{record.gmtModified,jdbcType=TIMESTAMP},
-      result = #{record.result,jdbcType=LONGVARCHAR}
+      result = #{record.result,jdbcType=VARCHAR}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -370,7 +398,7 @@
         gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
       </if>
       <if test="result != null">
-        result = #{result,jdbcType=LONGVARCHAR},
+        result = #{result,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
@@ -389,7 +417,7 @@
       parameter = #{parameter,jdbcType=VARCHAR},
       gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
       gmt_modified = #{gmtModified,jdbcType=TIMESTAMP},
-      result = #{result,jdbcType=LONGVARCHAR}
+      result = #{result,jdbcType=VARCHAR}
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="cn.yujian95.hospital.entity.LogOperation">

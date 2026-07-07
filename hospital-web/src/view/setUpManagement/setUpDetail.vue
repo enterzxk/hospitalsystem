@@ -328,6 +328,8 @@
       // 获取所有医院
       getHospitalInfo: function () {
         this.hospitalData = [];
+        this.tableAllData.tableData = [];
+        this.tableAllData.dataNull = false;
         getHospitalInfo(1, 50, '').then(res => {
           if (res.code === 200){
             if (res.data.list.length > 0) {
@@ -339,48 +341,61 @@
             }
           }
         }).catch(() => {
+          this.tableAllData.dataNull = true;
           tips('error', '获取医院信息失败');
         })
       },
       // 获取医院的专科列表
       getHospitalDepartmentList: function() {
         this.departmentSelectData = [];
+        this.tableAllData.tableData = [];
+        this.tableAllData.dataNull = false;
         getDoctorDepartmentList(this.selectHospitalID, 1, 50)
           .then(res => {
             if (res.code === 200) {
-              if (res.data.list !== null) {
-                this.departmentSelectData = res.data.list;
-                this.selectDepartmentID = res.data.list[0].id;
+              const data = res.data.list || [];
+              if (data.length > 0) {
+                this.departmentSelectData = data;
+                this.selectDepartmentID = data[0].id;
                 this.getOutpatientByHospital()
+              } else {
+                this.tableAllData.dataNull = true;
               }
             }
           }).catch(() => {
+          this.tableAllData.dataNull = true;
           tips('error', '获取专科列表失败')
         })
       },
       // 获取门诊列表
       getOutpatientByHospital: function() {
         this.outpatientSelectData = [];
+        this.tableAllData.tableData = [];
+        this.tableAllData.dataNull = false;
         getOutpatientByHospital(this.selectHospitalID, this.selectDepartmentID, 1, 50).then(res => {
           if (res.code === 200) {
-            const data = res.data.list;
-            if (res.data.list.length > 0) {
+            const data = res.data.list || [];
+            if (data.length > 0) {
               this.outpatientSelectData = data;
               this.selectOutpatientID = data[0].id;
               this.getAllOutCallList()
+            } else {
+              this.tableAllData.dataNull = true;
             }
           }
         }).catch(() => {
+          this.tableAllData.dataNull = true;
           tips('error', '获取门诊信息失败')
         })
       },
       // 获取列表数据，医生排版的数据
       getAllOutCallList: function() {
         this.tableAllData.tableData = [];
+        this.tableAllData.dataNull = false;
         getAllOutCallList(dateFormYMD(this.dateOutCall), this.pageList.pageNum, this.pageList.pageSize,
           this.selectHospitalID, this.selectDepartmentID, this.selectOutpatientID).then(res => {
             if (res.code === 200) {
-              const data = res.data.list;
+              const data = res.data.list || [];
               let that = this;
               if (data.length > 0) {
                 data.forEach(function (item, index) {
@@ -401,6 +416,7 @@
               this.getDoctorList()
             }
         }).catch(() => {
+          this.tableAllData.dataNull = true;
           tips('error', '获取出诊列表失败')
         })
       },
