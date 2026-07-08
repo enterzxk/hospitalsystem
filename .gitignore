@@ -61,6 +61,9 @@ Redis-x64-3.0.504.zip
 
 # Images (keep only essential ones)
 *.png
+!docs/
+!docs/screenshots/
+!docs/screenshots/*.png
 !hospital-web/src/assets/*.png
 !hospital-web/src/assets/科室图片/*.png
 !hospital/src/main/resources/static/*.png

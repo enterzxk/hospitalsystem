@@ -14,6 +14,7 @@
 ## 目录
 
 - [项目概述](#项目概述)
+- [界面预览](#界面预览)
 - [系统架构](#系统架构)
 - [核心能力](#核心能力)
 - [技术栈](#技术栈)
@@ -43,6 +44,30 @@
 | **模型管理** | 模型注册、版本管理、权重 URI、启停控制 |
 | **审计日志** | 上传/推理/确认/提交/模型变更全链路追溯 |
 | **运维监控** | API、AI Worker、队列、PostgreSQL、对象存储健康状态 |
+
+---
+
+## 界面预览
+
+> 以下截图来自当前项目本地运行界面，放置在 `docs/screenshots/` 目录，便于在 GitHub 首页直接查看系统效果。
+
+### 医院大厅与影像工作站
+
+| 医院大厅首页 | 医学影像 Viewer |
+|---|---|
+| ![医院大厅首页](docs/screenshots/01-home.png) | ![医学影像 Viewer](docs/screenshots/02-imaging-viewer.png) |
+
+### 诊断报告与影像上传
+
+| 看片 + 报告填写 | 影像上传 |
+|---|---|
+| ![诊断书写页面](docs/screenshots/03-diagnosis-write.png) | ![影像上传页面](docs/screenshots/04-imaging-upload.png) |
+
+### AI 平台管理
+
+| 模型管理 | 运维监控 | 审计日志 |
+|---|---|---|
+| ![模型管理](docs/screenshots/05-model-management.png) | ![运维监控](docs/screenshots/06-ops-monitor.png) | ![审计日志](docs/screenshots/07-audit-logs.png) |
 
 ---
 
@@ -139,7 +164,6 @@ AI 结果仅作为辅助参考，不自动提交最终诊断。检测和分类�
 | JWT | — | 令牌认证 |
 | MyBatis | — | ORM 框架 |
 | PostgreSQL | 15+ | 主数据库（推荐） |
-| MySQL | 8.x | 兼容数据库 |
 | Redis | 6.0+ | 缓存/Session |
 | MinIO | — | 对象存储（生产） |
 | Maven | 3.6+ | 依赖管理 |
@@ -178,7 +202,7 @@ AI 结果仅作为辅助参考，不自动提交最终诊断。检测和分类�
 | Maven | 3.6+ | 项目构建 |
 | Node.js | 16.x | **必须是 16.x**，不兼容 18/20/24 |
 | npm | 8.x+ | 包管理 |
-| PostgreSQL | 15+ | 推荐数据库（或 MySQL 8.0+） |
+| PostgreSQL | 15+ | 主数据库 |
 | Redis | 6.0+ | 缓存服务 |
 | Python | 3.9+ | AI 服务（可选） |
 
@@ -195,7 +219,7 @@ cd hospitalsystem
 
 ### 2. 数据库初始化
 
-**PostgreSQL（推荐）：**
+**PostgreSQL：**
 
 ```bash
 # 创建数据库
@@ -203,13 +227,6 @@ createdb -U postgres hospital
 
 # 导入数据
 psql -U postgres -d hospital -f hospital/src/main/resources/rebuild_database_final.sql
-```
-
-**MySQL（兼容）：**
-
-```bash
-mysql -u root -p -e "CREATE DATABASE hospital DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
-mysql -u root -p hospital < hospital/src/main/resources/rebuild_database_final.sql
 ```
 
 ### 3. 配置 Redis
@@ -545,9 +562,9 @@ nvm use 16.20.2
 node -v  # 应显示 v16.20.2
 ```
 
-### Q2: 数据库选 PostgreSQL 还是 MySQL？
+### Q2: 数据库为什么使用 PostgreSQL？
 
-课程报告推荐 PostgreSQL（开发档案要求），MySQL 兼容方案仍可用。`application.yml` 中切换数据源即可。
+开发档案要求采用 PostgreSQL。当前 `application.yml` 默认连接 `jdbc:postgresql://localhost:5432/hospital_imaging`，用于保存医院业务数据、标准影像元数据、AI 推理任务、结果表和审计日志。
 
 ### Q3: AI 服务启动报缺少模型权重
 
